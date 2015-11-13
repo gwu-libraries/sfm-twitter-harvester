@@ -1,0 +1,22 @@
+sfmrabbit:
+    image: rabbitmq:3-management
+    ports:
+        - "15672:15672"
+    restart: always
+    environment:
+        - RABBITMQ_DEFAULT_USER=sfm_user
+        - RABBITMQ_DEFAULT_PASS=password
+sfmtwitterrestharvester:
+    build: dev/rest
+    links:
+        - sfmrabbit:mq
+    volumes:
+        - "..:/opt/sfm-twitter-harvester"
+    restart: always
+sfmtwitterstreamharvester:
+    build: dev/stream
+    links:
+        - sfmrabbit:mq
+    volumes:
+        - "..:/opt/sfm-twitter-harvester"
+    restart: always
