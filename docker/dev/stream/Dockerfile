@@ -7,10 +7,10 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --upgrade pip
 #This pre-fetches the most recent requirements.txt.
 #TODO: Temporary approach
-ADD https://github.com/gwu-libraries/sfm-utils/raw/sfm_t46-twitter_harvester/requirements.txt /tmp/
+ADD https://raw.githubusercontent.com/gwu-libraries/sfm-utils/sfm_t46-twitter_harvester/requirements.txt /tmp/
 RUN pip install --process-dependency-links -r /tmp/requirements.txt
 #TODO: Change this to master
-ADD https://github.com/gwu-libraries/sfm-twitter-harvester/raw/sfm_t46-twitter_harvester/requirements.txt /tmp/
+ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/sfm_t46-twitter/requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
 RUN pip install appdeps
 #Configure supervisor
