@@ -12,11 +12,13 @@ sfmtwitterrestharvester:
         - sfmrabbit:mq
     volumes:
         - "..:/opt/sfm-twitter-harvester"
-    restart: always
+        - "../../sfm-utils:/opt/sfm-utils"
+#    restart: always
 sfmtwitterstreamharvester:
     build: dev/stream
     links:
         - sfmrabbit:mq
     volumes:
         - "..:/opt/sfm-twitter-harvester"
-    restart: always
+        - "../../sfm-utils:/opt/sfm-utils"
+#    restart: always

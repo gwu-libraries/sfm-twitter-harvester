@@ -1,4 +1,4 @@
 twarc==0.4.0
-git+https://github.com/gwu-libraries/sfm-utils.git@sfm_t46-twitter_harvester#egg=sfmutils
+#git+https://github.com/gwu-libraries/sfm-utils.git@sfm_t46-twitter_harvester#egg=sfmutils
 mock==1.3.0
-pika==0.10.0
+kombu==3.0.29

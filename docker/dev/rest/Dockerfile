@@ -11,6 +11,11 @@ ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/sfm_t4
 RUN pip install -r /tmp/requirements.txt --process-dependency-links --trusted-host github.com --allow-external warcprox-dev
 RUN pip install appdeps
 WORKDIR /opt/sfm-twitter-harvester
-CMD pip install -r requirements.txt --upgrade \
+CMD cd /opt/sfm-utils \
+    && pip install --process-dependency-links -r requirements.txt \
+    && python setup.py build \
+    && python setup.py install \
+    && cd /opt/sfm-twitter-harvester \
+    && pip install -r requirements.txt --upgrade \
     && appdeps.py --port-wait mq:5672 \
     && python twitter_harvester.py --debug service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS

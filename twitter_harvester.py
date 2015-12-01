@@ -11,15 +11,15 @@ ROUTING_KEY = "harvest.start.twitter.twitter_search"
 
 
 class TwitterHarvester(BaseHarvester):
-    def __init__(self, mq_config, process_interval_secs=1200):
-        BaseHarvester.__init__(self, mq_config, process_interval_secs=process_interval_secs)
+    def __init__(self, process_interval_secs=1200, mq_config=None, debug=False):
+        BaseHarvester.__init__(self, mq_config=mq_config, process_interval_secs=process_interval_secs, debug=debug)
         self.twarc = None
 
     def harvest_seeds(self):
-        #Create a twarc
+        # Create a twarc
         self._create_twarc()
 
-        #Dispatch message based on type.
+        # Dispatch message based on type.
         harvest_type = self.message.get("type")
         log.debug("Harvest type is %s", harvest_type)
         if harvest_type == "twitter_search":
@@ -40,14 +40,14 @@ class TwitterHarvester(BaseHarvester):
 
         for seed in self.message.get("seeds", []):
             query = seed.get("token")
-            #Get since_id from state_store
+            # Get since_id from state_store
             since_id = self.state_store.get_state(__name__, "{}.since_id".format(query)) if incremental else None
 
             max_tweet_id = self._process_tweets(self.twarc.search(query, since_id=since_id))
             log.debug("Searching on %s since %s returned %s tweets.", query,
                       since_id, self.harvest_result.summary.get("tweet"))
 
-            #Update state store
+            # Update state store
             if incremental and max_tweet_id:
                 self.state_store.set_state(__name__, "{}.since_id".format(query), max_tweet_id)
 

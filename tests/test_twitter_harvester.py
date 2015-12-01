@@ -5,14 +5,15 @@ from mock import MagicMock, patch, call
 from twitter_harvester import TwitterHarvester
 from twarc import Twarc
 import threading
-import pika
 import shutil
 import tempfile
 import json
 import time
+from datetime import datetime
+from kombu import Connection, Exchange, Queue, Producer
 from tests.tweets import tweet1, tweet2
 from sfmutils.state_store import DictHarvestStateStore
-from sfmutils.harvester import HarvestResult, MqConfig, EXCHANGE
+from sfmutils.harvester import HarvestResult, EXCHANGE
 
 base_message = {
     "id": "test:1",
@@ -44,12 +45,12 @@ class TestTwitterHarvester(tests.TestCase):
     def test_search(self, mock_twarc_class):
 
         mock_twarc = MagicMock(spec=Twarc)
-        #Expecting 2 searches. First returns 2 tweets. Second returns none.
+        # Expecting 2 searches. First returns 2 tweets. Second returns none.
         mock_twarc.search.side_effect = [(tweet1, tweet2), ()]
-        #Return mock_twarc when instantiating a twarc.
+        # Return mock_twarc when instantiating a twarc.
         mock_twarc_class.side_effect = [mock_twarc]
 
-        harvester = TwitterHarvester(MqConfig(None, None, None, None, None, skip_connection=True))
+        harvester = TwitterHarvester()
         harvester.state_store = DictHarvestStateStore()
         harvester.message = base_message
         harvester.harvest_result = HarvestResult()
@@ -62,7 +63,7 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
         self.assertEqual([call("gwu", since_id=None), call("gelman", since_id=None)], mock_twarc.search.mock_calls)
-        #Nothing added to state
+        # Nothing added to state
         self.assertEqual(0, len(harvester.state_store._state))
 
     @patch("twitter_harvester.Twarc", autospec=True)
@@ -70,17 +71,17 @@ class TestTwitterHarvester(tests.TestCase):
 
         message = base_message.copy()
         message["options"] = {
-            #Incremental means that will only retrieve new results.
+            # Incremental means that will only retrieve new results.
             "incremental": True
         }
 
         mock_twarc = MagicMock(spec=Twarc)
-        #Expecting 2 searches. First returns 2 tweets. Second returns none.
+        # Expecting 2 searches. First returns 2 tweets. Second returns none.
         mock_twarc.search.side_effect = [(tweet2,), ()]
-        #Return mock_twarc when instantiating a twarc.
+        # Return mock_twarc when instantiating a twarc.
         twarc_class.side_effect = [mock_twarc]
 
-        harvester = TwitterHarvester(MqConfig(None, None, None, None, None, skip_connection=True))
+        harvester = TwitterHarvester()
         state_store = DictHarvestStateStore()
         state_store.set_state("twitter_harvester", "gwu.since_id", 605726286741434400)
         harvester.state_store = state_store
@@ -95,43 +96,33 @@ class TestTwitterHarvester(tests.TestCase):
         self.assertSetEqual({"http://bit.ly/1ipwd0B"}, harvester.harvest_result.urls_as_set())
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
-        self.assertEqual([call("gwu", since_id=605726286741434400), call("gelman", since_id=None)], mock_twarc.search.mock_calls)
-        #State updated
+        self.assertEqual([call("gwu", since_id=605726286741434400), call("gelman", since_id=None)],
+                         mock_twarc.search.mock_calls)
+        # State updated
         self.assertEqual(660065173563158500, state_store.get_state("twitter_harvester", "gwu.since_id"))
+
 
 @unittest.skipIf(not tests.test_config_available, "Skipping test since test config not available.")
 @unittest.skipIf(not tests.integration_env_available, "Skipping test since integration env not available.")
 class TestTwitterHarvesterIntegration(tests.TestCase):
+    def _create_connection(self):
+        return Connection(hostname="mq", userid=tests.mq_username, password=tests.mq_password)
+
     def setUp(self):
-        credentials = pika.PlainCredentials(tests.mq_username, tests.mq_password)
-        parameters = pika.ConnectionParameters(host="mq", credentials=credentials)
-        self.connection = pika.BlockingConnection(parameters)
-        self.channel = self.connection.channel()
-        #Declare result queue
-        result = self.channel.queue_declare(exclusive=True)
-        self.result_queue = result.method.queue
-        #Bind
-        self.channel.queue_bind(exchange=EXCHANGE,
-                                queue=self.result_queue, routing_key="harvest.status.twitter.*")
-        #Declare web harvest queue
-        result = self.channel.queue_declare(exclusive=True)
-        self.web_harvest_queue = result.method.queue
-        #Bind
-        self.channel.queue_bind(exchange=EXCHANGE,
-                                queue=self.web_harvest_queue, routing_key="harvest.start.web")
-        #Declare warc_created queue
-        result = self.channel.queue_declare(exclusive=True)
-        self.warc_created_queue = result.method.queue
-        #Bind
-        self.channel.queue_bind(exchange=EXCHANGE,
-                                queue=self.warc_created_queue, routing_key="warc_created")
+        self.exchange = Exchange(EXCHANGE, type="topic")
+        self.result_queue = Queue(name="result_queue", routing_key="harvest.status.twitter.*", exchange=self.exchange,
+                                  durable=True)
+        self.web_harvest_queue = Queue(name="web_harvest_queue", routing_key="harvest.start.web", exchange=self.exchange)
+        self.warc_created_queue = Queue(name="warc_created_queue", routing_key="warc_created", exchange=self.exchange)
+        with self._create_connection() as connection:
+            self.result_queue(connection).declare()
+            self.web_harvest_queue(connection).declare()
+            self.warc_created_queue(connection).declare()
 
         self.collection_path = tempfile.mkdtemp()
 
     def tearDown(self):
         shutil.rmtree(self.collection_path, ignore_errors=True)
-        self.channel.close()
-        self.connection.close()
 
     def test_search(self):
         harvest_msg = {
@@ -154,41 +145,42 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             }
         }
-        self.channel.basic_publish(exchange=EXCHANGE,
-                                   routing_key="harvest.start.twitter.twitter_search",
-                                   properties=pika.spec.BasicProperties(content_type="application/json",
-                                                                        delivery_mode=2),
-                                   body=json.dumps(harvest_msg, indent=4))
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter.twitter_search")
 
-        #Now wait for result message.
-        result_body = None
-        counter = 0
-        while counter < 180:
-            time.sleep(.5)
-            method_frame, header_frame, result_body = self.channel.basic_get(self.result_queue)
-            if result_body:
-                self.channel.basic_ack(method_frame.delivery_tag)
-                break
-            counter += 1
-        self.assertTrue(result_body, "Timed out waiting for result.")
-        result_msg = json.loads(result_body)
-        #Matching ids
-        self.assertEqual("test:1", result_msg["id"])
-        #Success
-        self.assertEqual("completed success", result_msg["status"])
-        #Some tweets
-        self.assertTrue(result_msg["summary"]["tweet"])
+            # Now wait for result message.
+            counter = 0
+            bound_result_queue = self.result_queue(connection)
+            message_obj = None
+            while counter < 240 and not message_obj:
+                time.sleep(.5)
+                message_obj = bound_result_queue.get(no_ack=True)
+                counter += 1
+            self.assertTrue(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
+            result_msg = message_obj.payload
+            # Matching ids
+            self.assertEqual("test:1", result_msg["id"])
+            # Success
+            self.assertEqual("completed success", result_msg["status"])
+            # Some tweets
+            self.assertTrue(result_msg["summary"]["tweet"])
 
-        #Web harvest message.
-        method_frame, header_frame, web_harvest_body = self.channel.basic_get(self.web_harvest_queue)
-        self.assertTrue(web_harvest_body, "No web harvest message.")
-        web_harvest_msg = json.loads(web_harvest_body)
-        #Some seeds
-        self.assertTrue(len(web_harvest_msg["seeds"]))
+            # Web harvest message.
+            bound_web_harvest_queue = self.web_harvest_queue(connection)
+            message_obj = bound_web_harvest_queue.get()
+            # method_frame, header_frame, web_harvest_body = self.channel.basic_get(self.web_harvest_queue)
+            self.assertIsNotNone(message_obj, "No web harvest message.")
+            web_harvest_msg = message_obj.payload
+            # Some seeds
+            self.assertTrue(len(web_harvest_msg["seeds"]))
 
-        #Warc created message.
-        method_frame, header_frame, warc_created_body = self.channel.basic_get(self.warc_created_queue)
-        self.assertTrue(web_harvest_body, "No warc created message.")
+            # Warc created message.
+            # method_frame, header_frame, warc_created_body = self.channel.basic_get(self.warc_created_queue)
+            bound_warc_created_queue = self.warc_created_queue(connection)
+            message_obj = bound_warc_created_queue.get()
+            self.assertIsNotNone(message_obj, "No warc created message.")
 
     def test_filter(self):
         harvest_msg = {
@@ -211,51 +203,46 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             }
         }
-        self.channel.basic_publish(exchange=EXCHANGE,
-                                   routing_key="harvest.start.twitter.twitter_filter",
-                                   properties=pika.spec.BasicProperties(content_type="application/json",
-                                                                        delivery_mode=2),
-                                   body=json.dumps(harvest_msg, indent=4))
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter.twitter_filter")
 
-        #Wait 30 seconds
-        time.sleep(30)
+            # Wait 30 seconds
+            time.sleep(30)
 
-        #Send stop message
-        harvest_stop_msg = {
-            "id": "test:2",
-        }
-        self.channel.basic_publish(exchange=EXCHANGE,
-                                   routing_key="harvest.stop.twitter.twitter_filter",
-                                   properties=pika.spec.BasicProperties(content_type="application/json",
-                                                                        delivery_mode=2),
-                                   body=json.dumps(harvest_msg, indent=4))
+            # Send stop message
+            harvest_stop_msg = {
+                "id": "test:2",
+            }
+            producer.publish(harvest_stop_msg, routing_key="harvest.stop.twitter.twitter_filter")
 
-        #Now wait for result message.
-        result_body = None
-        counter = 0
-        while counter < 180:
-            time.sleep(.5)
-            method_frame, header_frame, result_body = self.channel.basic_get(self.result_queue)
-            if result_body:
-                self.channel.basic_ack(method_frame.delivery_tag)
-                break
-            counter += 1
-        self.assertTrue(result_body, "Timed out waiting for result.")
-        result_msg = json.loads(result_body)
-        #Matching ids
-        self.assertEqual("test:2", result_msg["id"])
-        #Success
-        self.assertEqual("completed success", result_msg["status"])
-        #Some tweets
-        self.assertTrue(result_msg["summary"]["tweet"])
+            # Now wait for result message.
+            counter = 0
+            message_obj = None
+            bound_result_queue = self.result_queue(connection)
+            while counter < 180 and not message_obj:
+                time.sleep(.5)
+                message_obj = bound_result_queue.get(no_ack=True)
+                counter += 1
+            self.assertIsNotNone(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
+            result_msg = message_obj.payload
+            # Matching ids
+            self.assertEqual("test:2", result_msg["id"])
+            # Success
+            self.assertEqual("completed success", result_msg["status"])
+            # Some tweets
+            self.assertTrue(result_msg["summary"]["tweet"])
 
-        #Web harvest message.
-        method_frame, header_frame, web_harvest_body = self.channel.basic_get(self.web_harvest_queue)
-        self.assertTrue(web_harvest_body, "No web harvest message.")
-        web_harvest_msg = json.loads(web_harvest_body)
-        #Some seeds
-        self.assertTrue(len(web_harvest_msg["seeds"]))
+            # Web harvest message.
+            bound_web_harvest_queue = self.web_harvest_queue(connection)
+            message_obj = bound_web_harvest_queue.get()
+            self.assertIsNotNone(message_obj, "No web harvest message.")
+            web_harvest_msg = message_obj.payload
+            # Some seeds
+            self.assertTrue(len(web_harvest_msg["seeds"]))
 
-        #Warc created message.
-        method_frame, header_frame, warc_created_body = self.channel.basic_get(self.warc_created_queue)
-        self.assertTrue(web_harvest_body, "No warc created message.")
+            # Warc created message.
+            bound_warc_created_queue = self.warc_created_queue(connection)
+            message_obj = bound_warc_created_queue.get()
+            self.assertIsNotNone(message_obj, "No warc created message.")
