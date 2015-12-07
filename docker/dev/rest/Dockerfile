@@ -3,18 +3,13 @@ MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 RUN pip install --upgrade pip
 #This pre-fetches the most recent requirements.txt.
-#TODO: Temporary approach
-ADD https://raw.githubusercontent.com/gwu-libraries/sfm-utils/sfm_t46-twitter_harvester/requirements.txt /tmp/
-RUN pip install --process-dependency-links -r /tmp/requirements.txt
-#TODO: Change this to master
 ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/sfm_t46-twitter/requirements.txt /tmp/
-RUN pip install -r /tmp/requirements.txt --process-dependency-links --trusted-host github.com --allow-external warcprox-dev
+RUN pip install -r /tmp/requirements.txt
 RUN pip install appdeps
 WORKDIR /opt/sfm-twitter-harvester
+#This links in sfm-utils as develop.
 CMD cd /opt/sfm-utils \
-    && pip install --process-dependency-links -r requirements.txt \
-    && python setup.py build \
-    && python setup.py install \
+    && python setup.py develop \
     && cd /opt/sfm-twitter-harvester \
     && pip install -r requirements.txt --upgrade \
     && appdeps.py --port-wait mq:5672 \
