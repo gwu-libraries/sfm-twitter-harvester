@@ -1,0 +1,5 @@
+twarc==0.4.0
+mock==1.3.0
+git+https://github.com/gwu-libraries/sfm-utils.git@0.1.0#egg=sfmutils
+librabbitmq==1.6.1
+git+https://github.com/gwu-libraries/warcprox.git@master#egg=warcprox-gwu
