@@ -3,7 +3,7 @@ MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 RUN pip install --upgrade pip
 #This pre-fetches the most recent requirements.txt.
-ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/sfm_t46-twitter/requirements.txt /tmp/
+ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/master/requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
 RUN pip install appdeps
 WORKDIR /opt/sfm-twitter-harvester
