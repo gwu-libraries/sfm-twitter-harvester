@@ -114,10 +114,17 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                                   durable=True)
         self.web_harvest_queue = Queue(name="web_harvest_queue", routing_key="harvest.start.web", exchange=self.exchange)
         self.warc_created_queue = Queue(name="warc_created_queue", routing_key="warc_created", exchange=self.exchange)
+        twitter_harvester_queue = Queue(name="twitter_harvester", exchange=self.exchange)
+        twitter_rest_harvester_queue = Queue(name="twitter_rest_harvester", exchange=self.exchange)
         with self._create_connection() as connection:
             self.result_queue(connection).declare()
+            self.result_queue(connection).purge()
             self.web_harvest_queue(connection).declare()
+            self.web_harvest_queue(connection).purge()
             self.warc_created_queue(connection).declare()
+            self.warc_created_queue(connection).purge()
+            twitter_harvester_queue(connection).purge()
+            twitter_rest_harvester_queue(connection).purge()
 
         self.collection_path = tempfile.mkdtemp()
 
@@ -169,7 +176,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
-            message_obj = bound_web_harvest_queue.get()
+            message_obj = bound_web_harvest_queue.get(no_ack=True)
             # method_frame, header_frame, web_harvest_body = self.channel.basic_get(self.web_harvest_queue)
             self.assertIsNotNone(message_obj, "No web harvest message.")
             web_harvest_msg = message_obj.payload
@@ -179,7 +186,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Warc created message.
             # method_frame, header_frame, warc_created_body = self.channel.basic_get(self.warc_created_queue)
             bound_warc_created_queue = self.warc_created_queue(connection)
-            message_obj = bound_warc_created_queue.get()
+            message_obj = bound_warc_created_queue.get(no_ack=True)
             self.assertIsNotNone(message_obj, "No warc created message.")
 
     def test_filter(self):
@@ -223,6 +230,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             bound_result_queue = self.result_queue(connection)
             while counter < 180 and not message_obj:
                 time.sleep(.5)
+                print counter
                 message_obj = bound_result_queue.get(no_ack=True)
                 counter += 1
             self.assertIsNotNone(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
@@ -236,13 +244,10 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
-            message_obj = bound_web_harvest_queue.get()
+            message_obj = bound_web_harvest_queue.get(no_ack=True)
             self.assertIsNotNone(message_obj, "No web harvest message.")
             web_harvest_msg = message_obj.payload
             # Some seeds
             self.assertTrue(len(web_harvest_msg["seeds"]))
 
-            # Warc created message.
-            bound_warc_created_queue = self.warc_created_queue(connection)
-            message_obj = bound_warc_created_queue.get()
-            self.assertIsNotNone(message_obj, "No warc created message.")
+            # There may or may not be a Warc created message.

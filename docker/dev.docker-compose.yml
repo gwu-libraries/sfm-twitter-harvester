@@ -7,7 +7,7 @@ sfmrabbit:
         - RABBITMQ_DEFAULT_USER=sfm_user
         - RABBITMQ_DEFAULT_PASS=password
 sfmtwitterrestharvester:
-    build: dev/rest
+    image: gwul/sfm-twitter-rest-harvester:dev
     links:
         - sfmrabbit:mq
     volumes:
@@ -15,7 +15,7 @@ sfmtwitterrestharvester:
         - "../../sfm-utils:/opt/sfm-utils"
 #    restart: always
 sfmtwitterstreamharvester:
-    build: dev/stream
+    image: gwul/sfm-twitter-stream-harvester:dev
     links:
         - sfmrabbit:mq
     volumes:
