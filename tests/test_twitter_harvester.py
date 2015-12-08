@@ -230,7 +230,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             bound_result_queue = self.result_queue(connection)
             while counter < 180 and not message_obj:
                 time.sleep(.5)
-                print counter
                 message_obj = bound_result_queue.get(no_ack=True)
                 counter += 1
             self.assertIsNotNone(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
