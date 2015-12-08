@@ -13,4 +13,4 @@ WORKDIR /opt/sfm-twitter-harvester
 RUN pip install -r requirements.txt
 RUN pip install appdeps
 CMD appdeps.py --port-wait mq:5672 \
-    && python twitter_harvester.py service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS
+    && python twitter_harvester.py --debug service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS
