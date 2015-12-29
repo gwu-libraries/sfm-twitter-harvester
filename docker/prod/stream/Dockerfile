@@ -1,7 +1,7 @@
 FROM python:2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
-ENV sfm_harvester_version 0.1.0
+ENV sfm_harvester_version 0.1.1
 RUN apt-get update && apt-get install -y \
     wget \
     supervisor \
