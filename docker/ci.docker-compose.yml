@@ -9,7 +9,7 @@ sfmtwitterrestharvester:
         - sfmrabbit:mq
     volumes:
         - "..:/opt/sfm-twitter-harvester"
-    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && python twitter_harvester.py --debug service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS"
+    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && python twitter_harvester.py service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS --debug"
 sfmtwitterstreamharvester:
     image: gwul/sfm-twitter-stream-harvester:dev
     links:
