@@ -13,4 +13,4 @@ CMD cd /opt/sfm-utils \
     && cd /opt/sfm-twitter-harvester \
     && pip install -r requirements.txt --upgrade \
     && appdeps.py --port-wait mq:5672 \
-    && python twitter_harvester.py --debug service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS
+    && python twitter_harvester.py --debug=$DEBUG service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS

@@ -13,6 +13,8 @@ sfmtwitterrestharvester:
     volumes:
         - "..:/opt/sfm-twitter-harvester"
         - "../../sfm-utils:/opt/sfm-utils"
+    environment:
+        - DEBUG=True
 #    restart: always
 sfmtwitterstreamharvester:
     image: gwul/sfm-twitter-stream-harvester:dev
@@ -22,3 +24,5 @@ sfmtwitterstreamharvester:
         - "..:/opt/sfm-twitter-harvester"
         - "../../sfm-utils:/opt/sfm-utils"
 #    restart: always
+    environment:
+        - DEBUG=True

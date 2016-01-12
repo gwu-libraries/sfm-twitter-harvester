@@ -11,8 +11,12 @@ sfmtwitterrestharvester:
     links:
         - sfmrabbit:mq
     restart: always
+    environment:
+        - DEBUG=True
 sfmtwitterstreamharvester:
     image: gwul/sfm-twitter-stream-harvester:master
     links:
         - sfmrabbit:mq
     restart: always
+    environment:
+        - DEBUG=True
