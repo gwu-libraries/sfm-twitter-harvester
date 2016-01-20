@@ -1,10 +1,11 @@
 FROM python:2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
+ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/master/requirements/requirements.apt /tmp/
 RUN apt-get update && apt-get install -y \
-    supervisor \
-    git
-RUN pip install --upgrade pip
+    git=1:1.9.1-1ubuntu0.2
+RUN cat /tmp/requirements.apt | tr "\n" " " | xargs apt-get install -y
+RUN pip install pip==7.1.2
 #This pre-fetches the most recent requirements.txt.
 ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/master/requirements.txt /tmp/
 RUN pip install -r /tmp/requirements.txt
