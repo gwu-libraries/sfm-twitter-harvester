@@ -3,7 +3,7 @@ MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/master/requirements/requirements.apt /tmp/
 RUN apt-get update && apt-get install -y \
-    git=1:1.9.1-1ubuntu0.2 \
+    git=1:2.1.4-2.1+deb8u1 \
     zip=3.0-8
 RUN cat /tmp/requirements.apt | tr "\n" " " | xargs apt-get install -y
 #Upgrade pip

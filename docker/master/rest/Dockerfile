@@ -2,6 +2,7 @@ FROM python:2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 RUN apt-get update && apt-get install -y \
+    git=1:2.1.4-2.1+deb8u1 \
     zip=3.0-8
 #Upgrade pip
 RUN pip install pip==7.1.2
