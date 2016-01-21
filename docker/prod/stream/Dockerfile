@@ -2,13 +2,14 @@ FROM python:2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 ENV sfm_harvester_version 0.1.1
+ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/${sfm_harvester_version}/requirements/requirements.apt /tmp/
 RUN apt-get update && apt-get install -y \
-    wget \
-    supervisor \
-    zip
+    zip=3.0-8
+RUN cat /tmp/requirements.apt | tr "\n" " " | xargs apt-get install -y
 #Upgrade pip
-RUN pip install --upgrade pip
-RUN wget --no-check-certificate https://github.com/gwu-libraries/sfm-twitter-harvester/archive/${sfm_harvester_version}.zip
+RUN pip install pip==7.1.2
+WORKDIR /tmp
+ADD https://github.com/gwu-libraries/sfm-twitter-harvester/archive/${sfm_harvester_version}.zip /tmp/
 RUN unzip ${sfm_harvester_version}.zip
 RUN mv sfm-twitter-harvester-${sfm_harvester_version} /opt/sfm-twitter-harvester
 WORKDIR /opt/sfm-twitter-harvester
