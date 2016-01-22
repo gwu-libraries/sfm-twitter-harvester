@@ -1,6 +1,8 @@
 # sfm-twitter-harvester
 Harvesters for twitter content as part of Social Feed Manager.
 
+[![Build Status](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester.svg?branch=master)](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester)
+
 Provides harvesters for Twitter [REST API](https://dev.twitter.com/rest/public) and [Streaming API](https://dev.twitter.com/streaming/overview).
 
 Harvesting is performed by [Twarc](https://github.com/edsu/twarc) and captured by a modified version of [WarcProx](https://github.com/gwu-libraries/warcprox).
