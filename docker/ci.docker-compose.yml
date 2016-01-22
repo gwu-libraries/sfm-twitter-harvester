@@ -1,5 +1,6 @@
 sfmrabbit:
-    image: rabbitmq:3-management
+    image: rabbitmq@sha256:397382d2b222f3a298a6c74e93f348fb16f9a7fde2c02ba14122624d852daae3
+    #RabbatMQ 3-management
     environment:
         - RABBITMQ_DEFAULT_USER=sfm_user
         - RABBITMQ_DEFAULT_PASS=password

@@ -1,4 +1,5 @@
-FROM python:2.7
+FROM python@sha256:ad39551743b356efda7c61f46019b97d49d1aab01b97f0e6d87c9b34326f3bfe
+#Python 2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/master/requirements/requirements.apt /tmp/
