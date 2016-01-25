@@ -7,7 +7,6 @@ from twarc import Twarc
 import threading
 import shutil
 import tempfile
-import json
 import time
 from datetime import datetime
 from kombu import Connection, Exchange, Queue, Producer
@@ -123,7 +122,10 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.web_harvest_queue(connection).purge()
             self.warc_created_queue(connection).declare()
             self.warc_created_queue(connection).purge()
+            # Declaring to avoid race condition with harvester starting.
+            twitter_harvester_queue(connection).declare()
             twitter_harvester_queue(connection).purge()
+            twitter_rest_harvester_queue(connection).declare()
             twitter_rest_harvester_queue(connection).purge()
 
         self.collection_path = tempfile.mkdtemp()

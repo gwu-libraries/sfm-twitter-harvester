@@ -10,11 +10,21 @@ sfmtwitterrestharvester:
         - sfmrabbit:mq
     volumes:
         - "..:/opt/sfm-twitter-harvester"
-    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && python twitter_harvester.py service mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS --debug"
+    environment:
+        - TWITTER_CONSUMER_KEY
+        - TWITTER_CONSUMER_SECRET
+        - TWITTER_ACCESS_TOKEN
+        - TWITTER_ACCESS_TOKEN_SECRET
+    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && python twitter_harvester.py service mq sfm_user password --debug"
 sfmtwitterstreamharvester:
     image: gwul/sfm-twitter-stream-harvester:dev
     links:
         - sfmrabbit:mq
     volumes:
         - "..:/opt/sfm-twitter-harvester"
-    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && supervisord -c /etc/supervisor/supervisord.conf && stream_consumer.py mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS twitter_harvester harvest.start.twitter.twitter_filter /opt/sfm-twitter-harvester/twitter_harvester.py --debug"
+    environment:
+        - TWITTER_CONSUMER_KEY
+        - TWITTER_CONSUMER_SECRET
+        - TWITTER_ACCESS_TOKEN
+        - TWITTER_ACCESS_TOKEN_SECRET
+    command: bash -c "pip install -r requirements.txt --upgrade && appdeps.py --port-wait mq:5672 && supervisord -c /etc/supervisor/supervisord.conf && stream_consumer.py mq sfm_user password twitter_harvester harvest.start.twitter.twitter_filter /opt/sfm-twitter-harvester/twitter_harvester.py --debug"

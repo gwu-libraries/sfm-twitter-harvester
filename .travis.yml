@@ -8,6 +8,7 @@ before_install:
 - curl -sSL https://get.docker.com/ > get_docker.sh
 - sudo sh get_docker.sh
 - sudo pip install -U docker-compose
+- docker-compose -f docker/ci.docker-compose.yml pull
 - docker-compose -f docker/ci.docker-compose.yml up -d
 - docker exec docker_sfmtwitterrestharvester_1 python -m unittest discover
 script: python -m unittest discover
