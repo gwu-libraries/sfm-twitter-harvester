@@ -15,10 +15,7 @@ RUN pip install appdeps
 #Configure supervisor
 VOLUME /etc/supervisor/conf.d
 WORKDIR /opt/sfm-twitter-harvester
-CMD cd /opt/sfm-utils \
-    && python setup.py develop \
-    && cd /opt/sfm-twitter-harvester \
-    && pip install -r requirements/dev.txt --upgrade \
+CMD pip install -r requirements/dev.txt --upgrade \
     && appdeps.py --port-wait mq:5672 \
     && supervisord -c /etc/supervisor/supervisord.conf \
     && stream_consumer.py mq $MQ_ENV_RABBITMQ_DEFAULT_USER $MQ_ENV_RABBITMQ_DEFAULT_PASS twitter_harvester harvest.start.twitter.twitter_filter /opt/sfm-twitter-harvester/twitter_harvester.py --debug=$DEBUG
