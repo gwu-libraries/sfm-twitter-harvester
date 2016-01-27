@@ -14,7 +14,7 @@ ADD https://github.com/gwu-libraries/sfm-twitter-harvester/archive/${sfm_harvest
 RUN unzip ${sfm_harvester_version}.zip
 RUN mv sfm-twitter-harvester-${sfm_harvester_version} /opt/sfm-twitter-harvester
 WORKDIR /opt/sfm-twitter-harvester
-RUN pip install -r requirements.txt
+RUN pip install -r requirements/requirements.txt
 RUN pip install appdeps
 #Configure supervisor
 VOLUME /etc/supervisor/conf.d
