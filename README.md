@@ -10,7 +10,13 @@ Harvesting is performed by [Twarc](https://github.com/edsu/twarc) and captured b
 ## Installing
     git clone https://github.com/gwu-libraries/sfm-twitter-harvester.git
     cd sfm-twitter-harvester
-    pip install -r requirements.txt
+    pip install -r requirements/requirements.txt
+
+Note that `requirements/requirements.txt` references the latest releast of warcprox-gwu and sfm-utils.
+If you are doing development on the interaction between warcprox-gwu, sfm-utils, and sfm-twitter-harvester,
+use `requirements/dev.txt`. This uses a local copy of warcprox-gwu (`../warcprox`) and sfm-utils (`../sfm-utils`)
+in editable mode.
+
 
 ## Running as a service
 ### Running as a service for the REST API.
