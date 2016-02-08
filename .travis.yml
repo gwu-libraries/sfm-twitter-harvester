@@ -5,8 +5,8 @@ sudo: required
 services:
 - docker
 before_install:
-- apt-get update
-- apt-get install -y docker-engine
+- sudo apt-get update
+- sudo apt-get install -y docker-engine
 - sudo pip install -U docker-compose
 - docker-compose -f docker/ci.docker-compose.yml pull
 - docker-compose -f docker/ci.docker-compose.yml up -d
