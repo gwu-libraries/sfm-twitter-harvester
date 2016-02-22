@@ -5,6 +5,7 @@ sfmrabbit:
         - "15672:15672"
     restart: always
     environment:
+        - TZ=EST
         - RABBITMQ_DEFAULT_USER=sfm_user
         - RABBITMQ_DEFAULT_PASS=password
 sfmtwitterrestharvester:
@@ -13,6 +14,7 @@ sfmtwitterrestharvester:
         - sfmrabbit:mq
     restart: always
     environment:
+        - TZ=EST
         - DEBUG=True
 sfmtwitterstreamharvester:
     image: gwul/sfm-twitter-stream-harvester:master
@@ -20,4 +22,5 @@ sfmtwitterstreamharvester:
         - sfmrabbit:mq
     restart: always
     environment:
+        - TZ=EST
         - DEBUG=True
