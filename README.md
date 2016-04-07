@@ -90,6 +90,23 @@ Required parameters:
 Optional parameters:
 
   * incremental: True (default) or False
+  
+### User timeline harvest type
+
+Type: twitter_user_timeline
+
+Api methods called:
+
+  * statuses/user_timeline
+  * users/lookup (to lookup screen names and user ids)
+
+Required parameters:
+
+  * token (for screen name) and/or uid (for user id)
+
+Optional parameters:
+
+  * incremental: True (default) or False
 
 ### Filter harvest type
 
@@ -101,7 +118,16 @@ Api methods called:
 
 Required parameters:
 
-  * token (for track)
+  * token: a dictionary containing track, follow, and/or locations
+
+### Sample harvest type
+
+Type: twitter_sample
+
+Api methods called:
+
+ * statuses/sample
+
 
 ### Authentication
 

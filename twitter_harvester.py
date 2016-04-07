@@ -3,13 +3,13 @@
 from __future__ import absolute_import
 import logging
 from twarc import Twarc
-from sfmutils.harvester import BaseHarvester
-
+from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND
 
 log = logging.getLogger(__name__)
 
 QUEUE = "twitter_rest_harvester"
-ROUTING_KEY = "harvest.start.twitter.twitter_search"
+SEARCH_ROUTING_KEY = "harvest.start.twitter.twitter_search"
+TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 
 
 class TwitterHarvester(BaseHarvester):
@@ -28,6 +28,10 @@ class TwitterHarvester(BaseHarvester):
             self.search()
         elif harvest_type == "twitter_filter":
             self.filter()
+        elif harvest_type == "twitter_sample":
+            self.sample()
+        elif harvest_type == "twitter_user_timeline":
+            self.user_timeline()
         else:
             raise KeyError
 
@@ -56,9 +60,71 @@ class TwitterHarvester(BaseHarvester):
     def filter(self):
         assert len(self.message.get("seeds", [])) == 1
 
-        track = self.message["seeds"][0]["token"]
+        track = self.message["seeds"][0]["token"].get("track")
+        follow = self.message["seeds"][0]["token"].get("follow")
+        locations = self.message["seeds"][0]["token"].get("locations")
 
-        self._process_tweets(self.twarc.stream(track))
+        self._process_tweets(self.twarc.filter(track=track, follow=follow, locations=locations))
+
+    def sample(self):
+        self._process_tweets(self.twarc.sample())
+
+    def user_timeline(self):
+        incremental = self.message.get("options", {}).get("incremental", False)
+
+        for seed in self.message.get("seeds", []):
+            screen_name = seed.get("token")
+            user_id = seed.get("uid")
+            assert screen_name or user_id
+
+            # If there is not a user_id, look it up.
+            if screen_name and not user_id:
+                user_id = self._lookup_user_id(screen_name)
+                if user_id:
+                    # Report back if nsid found
+                    self.harvest_result.uids[screen_name] = user_id
+                else:
+                    msg = "User id not found for user {}".format(screen_name)
+                    log.exception(msg)
+                    self.harvest_result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
+                    return
+            # Otherwise, get the current screen_name
+            else:
+                new_screen_name = self._lookup_screen_name(user_id)
+                if new_screen_name != screen_name:
+                    self.harvest_result.token_updates[user_id] = new_screen_name
+
+            # Get since_id from state_store
+            since_id = self.state_store.get_state(__name__,
+                                                  "timeline.{}.since_id".format(user_id)) if incremental else None
+
+            max_tweet_id = self._process_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
+            log.debug("Timeline for %s since %s returned %s tweets.", user_id,
+                      since_id, self.harvest_result.summary.get("tweet"))
+
+            # Update state store
+            if incremental and max_tweet_id:
+                self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
+
+    def _lookup_screen_name(self, user_id):
+        """
+        Lookup a screen name given a user id.
+        """
+        users = list(self.twarc.user_lookup(user_ids=(user_id,)))
+        assert len(users) in (0, 1)
+        if users:
+            return users[0]["screen_name"]
+        return None
+
+    def _lookup_user_id(self, screen_name):
+        """
+        Lookup a user id given a screen name.
+        """
+        users = list(self.twarc.user_lookup(screen_names=(screen_name,)))
+        assert len(users) in (0, 1)
+        if users:
+            return users[0]["id_str"]
+        return None
 
     def _process_tweets(self, tweets):
         max_tweet_id = None
@@ -82,4 +148,4 @@ class TwitterHarvester(BaseHarvester):
 
 
 if __name__ == "__main__":
-    TwitterHarvester.main(TwitterHarvester, QUEUE, [ROUTING_KEY])
+    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY])
