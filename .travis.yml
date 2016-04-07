@@ -10,8 +10,9 @@ before_install:
 - sudo pip install -U docker-compose
 - docker-compose -f docker/ci.docker-compose.yml pull
 - docker-compose -f docker/ci.docker-compose.yml up -d
+- sleep 30
 - docker exec docker_sfmtwitterrestharvester_1 python -m unittest discover
-install: pip install -r requirements/requirements.txt
+install: pip install -r requirements/master.txt
 script: python -m unittest discover
 notifications:
   email:
