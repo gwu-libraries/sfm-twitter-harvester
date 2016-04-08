@@ -238,7 +238,9 @@ class TestTwitterHarvester(tests.TestCase):
 @unittest.skipIf(not tests.test_config_available, "Skipping test since test config not available.")
 @unittest.skipIf(not tests.integration_env_available, "Skipping test since integration env not available.")
 class TestTwitterHarvesterIntegration(tests.TestCase):
-    def _create_connection(self):
+
+    @staticmethod
+    def _create_connection():
         return Connection(hostname="mq", userid=tests.mq_username, password=tests.mq_password)
 
     def setUp(self):

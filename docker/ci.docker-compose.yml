@@ -30,4 +30,4 @@ sfmtwitterstreamharvester:
         - TWITTER_CONSUMER_SECRET
         - TWITTER_ACCESS_TOKEN
         - TWITTER_ACCESS_TOKEN_SECRET
-    command: bash -c "pip install -r requirements/master.txt --upgrade && appdeps.py --port-wait mq:5672 && supervisord -c /etc/supervisor/supervisord.conf && stream_consumer.py mq sfm_user password twitter_harvester harvest.start.twitter.twitter_filter /opt/sfm-twitter-harvester/twitter_harvester.py --debug=True"
+    command: bash -c "pip install -r requirements/master.txt --upgrade && appdeps.py --port-wait mq:5672 && supervisord -c /etc/supervisor/supervisord.conf && stream_consumer.py mq sfm_user password twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter.twitter_sample /opt/sfm-twitter-harvester/twitter_harvester.py --debug=True"
