@@ -47,7 +47,7 @@ class TwitterHarvester(BaseHarvester):
         for seed in self.message.get("seeds", []):
             query = seed.get("token")
             # Get since_id from state_store
-            since_id = self.state_store.get_state(__name__, "{}.since_id".format(query)) if incremental else None
+            since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
 
             max_tweet_id = self._process_tweets(self.twarc.search(query, since_id=since_id))
             log.debug("Searching on %s since %s returned %s tweets.", query,
@@ -55,7 +55,7 @@ class TwitterHarvester(BaseHarvester):
 
             # Update state store
             if incremental and max_tweet_id:
-                self.state_store.set_state(__name__, "{}.since_id".format(query), max_tweet_id)
+                self.state_store.set_state(__name__, u"{}.since_id".format(query), max_tweet_id)
 
     def filter(self):
         assert len(self.message.get("seeds", [])) == 1
