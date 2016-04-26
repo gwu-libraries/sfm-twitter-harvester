@@ -14,6 +14,8 @@ class TestTwitterRestWarcIter(tests.TestCase):
         tweets = list(warc_iter)
         self.assertEquals(1473, len(tweets))
         self.assertEquals("721345764362948609", tweets[0][1])
+        # Datetime is aware
+        self.assertIsNotNone(tweets[0][2].tzinfo)
 
     def test_limit(self):
         warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("481186914", "999999"))
