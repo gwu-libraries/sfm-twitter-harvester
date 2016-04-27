@@ -73,6 +73,7 @@ class TwitterHarvester(BaseHarvester):
         incremental = self.message.get("options", {}).get("incremental", False)
 
         for seed in self.message.get("seeds", []):
+            seed_id = seed["id"]
             screen_name = seed.get("token")
             user_id = seed.get("uid")
             assert screen_name or user_id
@@ -82,7 +83,7 @@ class TwitterHarvester(BaseHarvester):
                 user_id = self._lookup_user_id(screen_name)
                 if user_id:
                     # Report back if nsid found
-                    self.harvest_result.uids[screen_name] = user_id
+                    self.harvest_result.uids[seed_id] = user_id
                 else:
                     msg = "User id not found for user {}".format(screen_name)
                     log.exception(msg)
@@ -92,7 +93,7 @@ class TwitterHarvester(BaseHarvester):
             else:
                 new_screen_name = self._lookup_screen_name(user_id)
                 if new_screen_name != screen_name:
-                    self.harvest_result.token_updates[user_id] = new_screen_name
+                    self.harvest_result.token_updates[seed_id] = new_screen_name
 
             # Get since_id from state_store
             since_id = self.state_store.get_state(__name__,

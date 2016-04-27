@@ -17,6 +17,7 @@ from sfmutils.harvester import HarvestResult, EXCHANGE
 base_search_message = {
     "id": "test:1",
     "type": "twitter_search",
+    "path": "/collections/test_collection/seedset_id",
     "seeds": [
         {
             "token": "gwu"
@@ -33,19 +34,21 @@ base_search_message = {
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
     },
     "collection": {
-        "id": "test_collection",
-        "path": "/collections/test_collection"
+        "id": "test_collection"
     }
 }
 
 base_timeline_message = {
     "id": "test:1",
     "type": "twitter_user_timeline",
+    "path": "/collections/test_collection/seedset_id",
     "seeds": [
         {
+            "id": "seed_id1",
             "uid": "28101965"
         },
         {
+            "id": "seed_id2",
             "token": "gelmanlibrary"
         }
 
@@ -57,8 +60,7 @@ base_timeline_message = {
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
     },
     "collection": {
-        "id": "test_collection",
-        "path": "/collections/test_collection"
+        "id": "test_collection"
     }
 }
 
@@ -265,17 +267,19 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             twitter_rest_harvester_queue(connection).declare()
             twitter_rest_harvester_queue(connection).purge()
 
-        self.collection_path = tempfile.mkdtemp()
+        self.harvest_path = tempfile.mkdtemp()
 
     def tearDown(self):
-        shutil.rmtree(self.collection_path, ignore_errors=True)
+        shutil.rmtree(self.harvest_path, ignore_errors=True)
 
     def test_search(self):
         harvest_msg = {
             "id": "test:1",
             "type": "twitter_search",
+            "path": self.harvest_path,
             "seeds": [
                 {
+                    "id": "seed_id3",
                     "token": "gwu"
                 }
             ],
@@ -286,9 +290,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
             "collection": {
-                "id": "test_collection",
-                "path": self.collection_path
-
+                "id": "test_collection"
             }
         }
         with self._create_connection() as connection:
@@ -332,8 +334,10 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
         harvest_msg = {
             "id": "test:2",
             "type": "twitter_filter",
+            "path": self.harvest_path,
             "seeds": [
                 {
+                    "id": "seed_id4",
                     "token": {
                         "track": "obama"
                     }
@@ -346,9 +350,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
             "collection": {
-                "id": "test_collection",
-                "path": self.collection_path
-
+                "id": "test_collection"
             }
         }
         with self._create_connection() as connection:
@@ -396,6 +398,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
         harvest_msg = {
             "id": "test:3",
             "type": "twitter_sample",
+            "path": self.harvest_path,
             "credentials": {
                 "consumer_key": tests.TWITTER_CONSUMER_KEY,
                 "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
@@ -403,9 +406,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
             "collection": {
-                "id": "test_collection",
-                "path": self.collection_path
-
+                "id": "test_collection"
             }
         }
         with self._create_connection() as connection:
