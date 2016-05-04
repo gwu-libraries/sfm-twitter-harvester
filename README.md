@@ -90,6 +90,8 @@ Required parameters:
 Optional parameters:
 
   * incremental: True (default) or False
+  * media: True or False (default) to extract media urls
+  * web_resources: True or False (default) to extract web resource urls
   
 ### User timeline harvest type
 
@@ -107,7 +109,9 @@ Required parameters:
 Optional parameters:
 
   * incremental: True (default) or False
-
+  * media: True or False (default) to extract media urls
+  * web_resources: True or False (default) to extract web resource urls
+  
 ### Filter harvest type
 
 Type: twitter_filter
@@ -119,6 +123,12 @@ Api methods called:
 Required parameters:
 
   * token: a dictionary containing track, follow, and/or locations
+  
+Optional parameters:
+
+  * media: True or False (default) to extract media urls
+  * web_resources: True or False (default) to extract web resource urls
+
 
 ### Sample harvest type
 
@@ -127,6 +137,11 @@ Type: twitter_sample
 Api methods called:
 
  * statuses/sample
+
+Optional parameters:
+
+  * media: True or False (default) to extract media urls
+  * web_resources: True or False (default) to extract web resource urls
 
 
 ### Authentication

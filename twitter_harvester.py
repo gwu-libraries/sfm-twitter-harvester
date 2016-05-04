@@ -17,10 +17,16 @@ class TwitterHarvester(BaseHarvester):
         BaseHarvester.__init__(self, mq_config=mq_config, stream_restart_interval_secs=stream_restart_interval_secs,
                                debug=debug)
         self.twarc = None
+        self.extract_media = False
+        self.extract_web_resources = False
 
     def harvest_seeds(self):
         # Create a twarc
         self._create_twarc()
+
+        # Get harvest extract options.
+        self.extract_media = self.message.get("options", {}).get("media", False)
+        self.extract_web_resources = self.message.get("options", {}).get("web_resources", False)
 
         # Dispatch message based on type.
         harvest_type = self.message.get("type")
@@ -105,6 +111,7 @@ class TwitterHarvester(BaseHarvester):
                       since_id, self.harvest_result.summary.get("tweet"))
 
             # Update state store
+            log.info("IS INCREMENTAL: %s", incremental)
             if incremental and max_tweet_id:
                 self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
 
@@ -139,14 +146,23 @@ class TwitterHarvester(BaseHarvester):
             if "text" in tweet:
                 max_tweet_id = max(max_tweet_id, tweet.get("id"))
                 self.harvest_result.increment_summary("tweet")
-                if "urls" in tweet["entities"]:
-                    for url in tweet["entities"]["urls"]:
-                        self.harvest_result.urls.append(url["expanded_url"])
-                if "media" in tweet["entities"]:
-                    for media in tweet["entities"]["media"]:
-                        self.harvest_result.urls.append(media["media_url"])
+                # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
+                status = tweet
+                if "retweeted_status" in tweet:
+                    status = tweet["retweeted_status"]
+                elif "quoted_status" in tweet:
+                    status = tweet["quoted_status"]
+                self._process_entities(status.get("entities", {}))
+                self._process_entities(status.get("extended_entities", {}))
         return max_tweet_id
 
+    def _process_entities(self, entities):
+        if self.extract_web_resources:
+            for url in entities.get("urls", []):
+                self.harvest_result.urls.append(url["expanded_url"])
+        if self.extract_media:
+            for media in entities.get("media", []):
+                self.harvest_result.urls.append(media["media_url"])
 
 if __name__ == "__main__":
     TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY])
