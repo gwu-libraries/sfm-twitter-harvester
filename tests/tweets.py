@@ -107,6 +107,7 @@ tweet1 = {
     "lang": "en"
 }
 
+# tweet2 has a url
 tweet2 = {
     "created_at": "Fri Oct 30 12:06:15 +0000 2015",
     "id": 660065173563158500,
@@ -193,4 +194,580 @@ tweet2 = {
     "possibly_sensitive": False,
     "possibly_sensitive_appealable": False,
     "lang": "en"
+}
+
+# tweet3 has an extended entity.
+tweet3 = {
+    "contributors": None,
+    "truncated": False,
+    "text": "Test tweet 9. Tweet with a GIF. https://t.co/x6AYFg3REg",
+    "is_quote_status": False,
+    "in_reply_to_status_id": None,
+    "id": 727894186415013888,
+    "favorite_count": 0,
+    "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+    "retweeted": False,
+    "coordinates": None,
+    "entities": {
+        "symbols": [],
+        "user_mentions": [],
+        "hashtags": [],
+        "urls": [],
+        "media": [{
+            "expanded_url": "http://twitter.com/jlittman_dev/status/727894186415013888/photo/1",
+            "display_url": "pic.twitter.com/x6AYFg3REg",
+            "url": "https://t.co/x6AYFg3REg",
+            "media_url_https": "https://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg",
+            "id_str": "727894166961831936",
+            "sizes": {
+                "large": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "small": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "medium": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "thumb": {
+                    "h": 150,
+                    "resize": "crop",
+                    "w": 150
+                }
+            },
+            "indices": [32, 55],
+            "type": "photo",
+            "id": 727894166961831936,
+            "media_url": "http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg"
+        }]
+    },
+    "in_reply_to_screen_name": None,
+    "in_reply_to_user_id": None,
+    "retweet_count": 0,
+    "id_str": "727894186415013888",
+    "favorited": False,
+    "user": {
+        "follow_request_sent": False,
+        "has_extended_profile": False,
+        "profile_use_background_image": True,
+        "default_profile_image": True,
+        "id": 2875189485,
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "verified": False,
+        "profile_text_color": "333333",
+        "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "entities": {
+            "description": {
+                "urls": []
+            }
+        },
+        "followers_count": 0,
+        "profile_sidebar_border_color": "C0DEED",
+        "id_str": "2875189485",
+        "profile_background_color": "C0DEED",
+        "listed_count": 0,
+        "is_translation_enabled": False,
+        "utc_offset": None,
+        "statuses_count": 9,
+        "description": "",
+        "friends_count": 0,
+        "location": "",
+        "profile_link_color": "0084B4",
+        "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "following": False,
+        "geo_enabled": True,
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "screen_name": "jlittman_dev",
+        "lang": "en",
+        "profile_background_tile": False,
+        "favourites_count": 0,
+        "name": "Justin Littman dev",
+        "notifications": False,
+        "url": None,
+        "created_at": "Thu Nov 13 15:49:55 +0000 2014",
+        "contributors_enabled": False,
+        "time_zone": None,
+        "protected": False,
+        "default_profile": True,
+        "is_translator": False
+    },
+    "geo": None,
+    "in_reply_to_user_id_str": None,
+    "possibly_sensitive": False,
+    "lang": "en",
+    "created_at": "Wed May 04 16:14:32 +0000 2016",
+    "in_reply_to_status_id_str": None,
+    "place": None,
+    "extended_entities": {
+        "media": [{
+            "expanded_url": "http://twitter.com/jlittman_dev/status/727894186415013888/photo/1",
+            "display_url": "pic.twitter.com/x6AYFg3REg",
+            "url": "https://t.co/x6AYFg3REg",
+            "media_url_https": "https://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg",
+            "video_info": {
+                "aspect_ratio": [30, 23],
+                "variants": [{
+                    "url": "https://pbs.twimg.com/tweet_video/Chn_42fWwAASuva.mp4",
+                    "bitrate": 0,
+                    "content_type": "video/mp4"
+                }]
+            },
+            "id_str": "727894166961831936",
+            "sizes": {
+                "large": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "small": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "medium": {
+                    "h": 230,
+                    "resize": "fit",
+                    "w": 300
+                },
+                "thumb": {
+                    "h": 150,
+                    "resize": "crop",
+                    "w": 150
+                }
+            },
+            "indices": [32, 55],
+            "type": "animated_gif",
+            "id": 727894166961831936,
+            "media_url": "http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg"
+        }]
+    }
+}
+
+# tweet4 has a quoted_status
+tweet4 = {
+    "contributors": None,
+    "truncated": False,
+    "text": "Test 10. Retweet. https://t.co/tBu6RRJoKr",
+    "is_quote_status": True,
+    "in_reply_to_status_id": None,
+    "id": 727930772691292161,
+    "favorite_count": 0,
+    "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+    "quoted_status_id": 503873833213104128,
+    "retweeted": False,
+    "coordinates": None,
+    "quoted_status": {
+        "contributors": None,
+        "truncated": False,
+        "text": "First day at Gelman Library. First tweet. http://t.co/Gz5ybAD6os",
+        "is_quote_status": False,
+        "in_reply_to_status_id": None,
+        "id": 503873833213104128,
+        "favorite_count": 4,
+        "source": "<a href=\"http://twitter.com/download/android\" rel=\"nofollow\">Twitter for Android</a>",
+        "retweeted": False,
+        "coordinates": None,
+        "entities": {
+            "symbols": [],
+            "user_mentions": [],
+            "hashtags": [],
+            "urls": [],
+            "media": [{
+                "expanded_url": "http://twitter.com/justin_littman/status/503873833213104128/photo/1",
+                "display_url": "pic.twitter.com/Gz5ybAD6os",
+                "url": "http://t.co/Gz5ybAD6os",
+                "media_url_https": "https://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg",
+                "id_str": "503873819560665088",
+                "sizes": {
+                    "large": {
+                        "h": 576,
+                        "resize": "fit",
+                        "w": 1024
+                    },
+                    "small": {
+                        "h": 191,
+                        "resize": "fit",
+                        "w": 340
+                    },
+                    "medium": {
+                        "h": 338,
+                        "resize": "fit",
+                        "w": 600
+                    },
+                    "thumb": {
+                        "h": 150,
+                        "resize": "crop",
+                        "w": 150
+                    }
+                },
+                "indices": [42, 64],
+                "type": "photo",
+                "id": 503873819560665088,
+                "media_url": "http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg"
+            }]
+        },
+        "in_reply_to_screen_name": None,
+        "in_reply_to_user_id": None,
+        "retweet_count": 0,
+        "id_str": "503873833213104128",
+        "favorited": False,
+        "user": {
+            "follow_request_sent": False,
+            "has_extended_profile": False,
+            "profile_use_background_image": True,
+            "default_profile_image": False,
+            "id": 481186914,
+            "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+            "verified": False,
+            "profile_text_color": "333333",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg",
+            "profile_sidebar_fill_color": "DDEEF6",
+            "entities": {
+                "description": {
+                    "urls": []
+                }
+            },
+            "followers_count": 113,
+            "profile_sidebar_border_color": "C0DEED",
+            "id_str": "481186914",
+            "profile_background_color": "C0DEED",
+            "listed_count": 9,
+            "is_translation_enabled": False,
+            "utc_offset": -14400,
+            "statuses_count": 260,
+            "description": "",
+            "friends_count": 64,
+            "location": "",
+            "profile_link_color": "0084B4",
+            "profile_image_url": "http://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg",
+            "following": False,
+            "geo_enabled": True,
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/481186914/1460820528",
+            "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+            "screen_name": "justin_littman",
+            "lang": "en",
+            "profile_background_tile": False,
+            "favourites_count": 117,
+            "name": "Justin Littman",
+            "notifications": False,
+            "url": None,
+            "created_at": "Thu Feb 02 12:19:18 +0000 2012",
+            "contributors_enabled": False,
+            "time_zone": "Eastern Time (US & Canada)",
+            "protected": False,
+            "default_profile": True,
+            "is_translator": False
+        },
+        "geo": None,
+        "in_reply_to_user_id_str": None,
+        "possibly_sensitive": False,
+        "lang": "en",
+        "created_at": "Mon Aug 25 11:57:38 +0000 2014",
+        "in_reply_to_status_id_str": None,
+        "place": None,
+        "extended_entities": {
+            "media": [{
+                "expanded_url": "http://twitter.com/justin_littman/status/503873833213104128/photo/1",
+                "display_url": "pic.twitter.com/Gz5ybAD6os",
+                "url": "http://t.co/Gz5ybAD6os",
+                "media_url_https": "https://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg",
+                "id_str": "503873819560665088",
+                "sizes": {
+                    "large": {
+                        "h": 576,
+                        "resize": "fit",
+                        "w": 1024
+                    },
+                    "small": {
+                        "h": 191,
+                        "resize": "fit",
+                        "w": 340
+                    },
+                    "medium": {
+                        "h": 338,
+                        "resize": "fit",
+                        "w": 600
+                    },
+                    "thumb": {
+                        "h": 150,
+                        "resize": "crop",
+                        "w": 150
+                    }
+                },
+                "indices": [42, 64],
+                "type": "photo",
+                "id": 503873819560665088,
+                "media_url": "http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg"
+            }]
+        }
+    },
+    "entities": {
+        "symbols": [],
+        "user_mentions": [],
+        "hashtags": [],
+        "urls": [{
+            "url": "https://t.co/tBu6RRJoKr",
+            "indices": [18, 41],
+            "expanded_url": "https://twitter.com/justin_littman/status/503873833213104128",
+            "display_url": "twitter.com/justin_littman\u2026"
+        }]
+    },
+    "in_reply_to_screen_name": None,
+    "in_reply_to_user_id": None,
+    "retweet_count": 0,
+    "id_str": "727930772691292161",
+    "favorited": False,
+    "user": {
+        "follow_request_sent": False,
+        "has_extended_profile": False,
+        "profile_use_background_image": True,
+        "default_profile_image": True,
+        "id": 2875189485,
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "verified": False,
+        "profile_text_color": "333333",
+        "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "entities": {
+            "description": {
+                "urls": []
+            }
+        },
+        "followers_count": 0,
+        "profile_sidebar_border_color": "C0DEED",
+        "id_str": "2875189485",
+        "profile_background_color": "C0DEED",
+        "listed_count": 0,
+        "is_translation_enabled": False,
+        "utc_offset": None,
+        "statuses_count": 10,
+        "description": "",
+        "friends_count": 0,
+        "location": "",
+        "profile_link_color": "0084B4",
+        "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "following": False,
+        "geo_enabled": True,
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "screen_name": "jlittman_dev",
+        "lang": "en",
+        "profile_background_tile": False,
+        "favourites_count": 0,
+        "name": "Justin Littman dev",
+        "notifications": False,
+        "url": None,
+        "created_at": "Thu Nov 13 15:49:55 +0000 2014",
+        "contributors_enabled": False,
+        "time_zone": None,
+        "protected": False,
+        "default_profile": True,
+        "is_translator": False
+    },
+    "geo": None,
+    "in_reply_to_user_id_str": None,
+    "possibly_sensitive": False,
+    "lang": "en",
+    "created_at": "Wed May 04 18:39:55 +0000 2016",
+    "quoted_status_id_str": "503873833213104128",
+    "in_reply_to_status_id_str": None,
+    "place": None
+}
+
+# tweet5 has a retweet_status
+tweet5 = {
+    "contributors": None,
+    "truncated": False,
+    "text": "RT @justin_littman: Ahh ... so in the context of web crawling, that's what a \"frontier\" means: https://t.co/6oDZe03LsV",
+    "is_quote_status": False,
+    "in_reply_to_status_id": None,
+    "id": 727933040803057667,
+    "favorite_count": 0,
+    "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+    "retweeted": False,
+    "coordinates": None,
+    "entities": {
+        "symbols": [],
+        "user_mentions": [{
+            "id": 481186914,
+            "indices": [3, 18],
+            "id_str": "481186914",
+            "screen_name": "justin_littman",
+            "name": "Justin Littman"
+        }],
+        "hashtags": [],
+        "urls": [{
+            "url": "https://t.co/6oDZe03LsV",
+            "indices": [95, 118],
+            "expanded_url": "http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html",
+            "display_url": "nlp.stanford.edu/IR-book/html/h\u2026"
+        }]
+    },
+    "in_reply_to_screen_name": None,
+    "in_reply_to_user_id": None,
+    "retweet_count": 2,
+    "id_str": "727933040803057667",
+    "favorited": False,
+    "retweeted_status": {
+        "contributors": None,
+        "truncated": False,
+        "text": "Ahh ... so in the context of web crawling, that's what a \"frontier\" means: https://t.co/6oDZe03LsV",
+        "is_quote_status": False,
+        "in_reply_to_status_id": None,
+        "id": 725271102444953601,
+        "favorite_count": 2,
+        "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+        "retweeted": False,
+        "coordinates": None,
+        "entities": {
+            "symbols": [],
+            "user_mentions": [],
+            "hashtags": [],
+            "urls": [{
+                "url": "https://t.co/6oDZe03LsV",
+                "indices": [75, 98],
+                "expanded_url": "http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html",
+                "display_url": "nlp.stanford.edu/IR-book/html/h\u2026"
+            }]
+        },
+        "in_reply_to_screen_name": None,
+        "in_reply_to_user_id": None,
+        "retweet_count": 2,
+        "id_str": "725271102444953601",
+        "favorited": False,
+        "user": {
+            "follow_request_sent": False,
+            "has_extended_profile": False,
+            "profile_use_background_image": True,
+            "default_profile_image": False,
+            "id": 481186914,
+            "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+            "verified": False,
+            "profile_text_color": "333333",
+            "profile_image_url_https": "https://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg",
+            "profile_sidebar_fill_color": "DDEEF6",
+            "entities": {
+                "description": {
+                    "urls": []
+                }
+            },
+            "followers_count": 113,
+            "profile_sidebar_border_color": "C0DEED",
+            "id_str": "481186914",
+            "profile_background_color": "C0DEED",
+            "listed_count": 9,
+            "is_translation_enabled": False,
+            "utc_offset": -14400,
+            "statuses_count": 260,
+            "description": "",
+            "friends_count": 64,
+            "location": "",
+            "profile_link_color": "0084B4",
+            "profile_image_url": "http://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg",
+            "following": False,
+            "geo_enabled": True,
+            "profile_banner_url": "https://pbs.twimg.com/profile_banners/481186914/1460820528",
+            "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+            "screen_name": "justin_littman",
+            "lang": "en",
+            "profile_background_tile": False,
+            "favourites_count": 117,
+            "name": "Justin Littman",
+            "notifications": False,
+            "url": None,
+            "created_at": "Thu Feb 02 12:19:18 +0000 2012",
+            "contributors_enabled": False,
+            "time_zone": "Eastern Time (US & Canada)",
+            "protected": False,
+            "default_profile": True,
+            "is_translator": False
+        },
+        "geo": None,
+        "in_reply_to_user_id_str": None,
+        "possibly_sensitive": False,
+        "lang": "en",
+        "created_at": "Wed Apr 27 10:31:20 +0000 2016",
+        "in_reply_to_status_id_str": None,
+        "place": {
+            "full_name": "Centreville, VA",
+            "url": "https://api.twitter.com/1.1/geo/id/ffcc53c4a4e7a620.json",
+            "country": "United States",
+            "place_type": "city",
+            "bounding_box": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-77.479597, 38.802143],
+                        [-77.397429, 38.802143],
+                        [-77.397429, 38.880183],
+                        [-77.479597, 38.880183]
+                    ]
+                ]
+            },
+            "contained_within": [],
+            "country_code": "US",
+            "attributes": {},
+            "id": "ffcc53c4a4e7a620",
+            "name": "Centreville"
+        }
+    },
+    "user": {
+        "follow_request_sent": False,
+        "has_extended_profile": False,
+        "profile_use_background_image": True,
+        "default_profile_image": True,
+        "id": 2875189485,
+        "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+        "verified": False,
+        "profile_text_color": "333333",
+        "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "profile_sidebar_fill_color": "DDEEF6",
+        "entities": {
+            "description": {
+                "urls": []
+            }
+        },
+        "followers_count": 0,
+        "profile_sidebar_border_color": "C0DEED",
+        "id_str": "2875189485",
+        "profile_background_color": "C0DEED",
+        "listed_count": 0,
+        "is_translation_enabled": False,
+        "utc_offset": None,
+        "statuses_count": 11,
+        "description": "",
+        "friends_count": 0,
+        "location": "",
+        "profile_link_color": "0084B4",
+        "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+        "following": False,
+        "geo_enabled": True,
+        "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+        "screen_name": "jlittman_dev",
+        "lang": "en",
+        "profile_background_tile": False,
+        "favourites_count": 0,
+        "name": "Justin Littman dev",
+        "notifications": False,
+        "url": None,
+        "created_at": "Thu Nov 13 15:49:55 +0000 2014",
+        "contributors_enabled": False,
+        "time_zone": None,
+        "protected": False,
+        "default_profile": True,
+        "is_translator": False
+    },
+    "geo": None,
+    "in_reply_to_user_id_str": None,
+    "possibly_sensitive": False,
+    "lang": "en",
+    "created_at": "Wed May 04 18:48:55 +0000 2016",
+    "in_reply_to_status_id_str": None,
+    "place": None
 }

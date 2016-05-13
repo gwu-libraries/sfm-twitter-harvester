@@ -9,8 +9,9 @@ import shutil
 import tempfile
 import time
 from datetime import datetime
+import copy
 from kombu import Connection, Exchange, Queue, Producer
-from tests.tweets import tweet1, tweet2
+from tests.tweets import *
 from sfmutils.state_store import DictHarvestStateStore
 from sfmutils.harvester import HarvestResult, EXCHANGE
 
@@ -33,6 +34,11 @@ base_search_message = {
         "access_token": tests.TWITTER_ACCESS_TOKEN,
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
     },
+    "options": {
+        "web_resources": True,
+        "media": True,
+        "tweets": True
+    },
     "collection": {
         "id": "test_collection"
     }
@@ -53,6 +59,11 @@ base_timeline_message = {
         }
 
     ],
+    "options": {
+        "web_resources": True,
+        "media": True,
+        "tweets": True
+    },
     "credentials": {
         "consumer_key": tests.TWITTER_CONSUMER_KEY,
         "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
@@ -94,11 +105,8 @@ class TestTwitterHarvester(tests.TestCase):
     @patch("twitter_harvester.Twarc", autospec=True)
     def test_incremental_search(self, twarc_class):
 
-        message = base_search_message.copy()
-        message["options"] = {
-            # Incremental means that will only retrieve new results.
-            "incremental": True
-        }
+        message = copy.deepcopy(base_search_message)
+        message["options"]["incremental"] = True
 
         mock_twarc = MagicMock(spec=Twarc)
         # Expecting 2 searches. First returns 2 tweets. Second returns none.
@@ -157,11 +165,8 @@ class TestTwitterHarvester(tests.TestCase):
     @patch("twitter_harvester.Twarc", autospec=True)
     def test_incremental_user_timeline(self, twarc_class):
 
-        message = base_timeline_message.copy()
-        message["options"] = {
-            # Incremental means that will only retrieve new results.
-            "incremental": True
-        }
+        message = copy.deepcopy(base_timeline_message)
+        message["options"]["incremental"] = True
 
         mock_twarc = MagicMock(spec=Twarc)
         # Expecting 2 timelines. First returns 1 tweets. Second returns none.
@@ -236,6 +241,51 @@ class TestTwitterHarvester(tests.TestCase):
 
         mock_twarc.user_lookup.assert_called_once_with(screen_names=("justin_littman",))
 
+    def test_harvest_options_web(self):
+
+        harvester = TwitterHarvester()
+        harvester.harvest_result = HarvestResult()
+        harvester.stop_event = threading.Event()
+        harvester.extract_media = False
+        harvester.extract_web_resources = True
+
+        harvester._process_tweets([tweet2, tweet3, tweet4, tweet5])
+        self.assertSetEqual({'http://bit.ly/1ipwd0B',  # url
+                             'http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html'  # from retweet
+                             },
+                            harvester.harvest_result.urls_as_set())
+
+    def test_harvest_options_media(self):
+        harvester = TwitterHarvester()
+        harvester.harvest_result = HarvestResult()
+        harvester.stop_event = threading.Event()
+        harvester.extract_media = True
+        harvester.extract_web_resources = False
+
+        harvester._process_tweets([tweet2, tweet3, tweet4, tweet5])
+        self.assertSetEqual({
+            'http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg',  # media/extended entity
+            'http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg',  # from quoted status
+
+        },
+            harvester.harvest_result.urls_as_set())
+
+    def test_default_harvest_options(self):
+        harvester = TwitterHarvester()
+        harvester.harvest_result = HarvestResult()
+        harvester.stop_event = threading.Event()
+        harvester.extract_media = False
+        harvester.extract_web_resources = False
+
+        harvester._process_tweets([tweet2, tweet3, tweet4, tweet5])
+        self.assertSetEqual(set(),
+                            harvester.harvest_result.urls_as_set())
+
+            # TODO: Test providing options.
+    # TODO: Test default options.
+    # TODO: Test extract web resoures.
+    # TODO: Test extract media.
+    # TODO: Test ignore tweets.
 
 @unittest.skipIf(not tests.test_config_available, "Skipping test since test config not available.")
 @unittest.skipIf(not tests.integration_env_available, "Skipping test since integration env not available.")
