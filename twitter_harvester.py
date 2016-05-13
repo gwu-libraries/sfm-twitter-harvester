@@ -13,8 +13,9 @@ TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 
 
 class TwitterHarvester(BaseHarvester):
-    def __init__(self, process_interval_secs=1200, mq_config=None, debug=False):
-        BaseHarvester.__init__(self, mq_config=mq_config, process_interval_secs=process_interval_secs, debug=debug)
+    def __init__(self, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False):
+        BaseHarvester.__init__(self, mq_config=mq_config, stream_restart_interval_secs=stream_restart_interval_secs,
+                               debug=debug)
         self.twarc = None
 
     def harvest_seeds(self):
@@ -136,15 +137,14 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
             if "text" in tweet:
-                with self.harvest_result_lock:
-                    max_tweet_id = max(max_tweet_id, tweet.get("id"))
-                    self.harvest_result.increment_summary("tweet")
-                    if "urls" in tweet["entities"]:
-                        for url in tweet["entities"]["urls"]:
-                            self.harvest_result.urls.append(url["expanded_url"])
-                    if "media" in tweet["entities"]:
-                        for media in tweet["entities"]["media"]:
-                            self.harvest_result.urls.append(media["media_url"])
+                max_tweet_id = max(max_tweet_id, tweet.get("id"))
+                self.harvest_result.increment_summary("tweet")
+                if "urls" in tweet["entities"]:
+                    for url in tweet["entities"]["urls"]:
+                        self.harvest_result.urls.append(url["expanded_url"])
+                if "media" in tweet["entities"]:
+                    for media in tweet["entities"]["media"]:
+                        self.harvest_result.urls.append(media["media_url"])
         return max_tweet_id
 
 

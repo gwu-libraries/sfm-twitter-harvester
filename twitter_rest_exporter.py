@@ -45,6 +45,7 @@ class TwitterStatusTable(BaseTable):
     def id_field(self):
         return "twitter_id"
 
+
 class TwitterRestExporter(BaseExporter):
     def __init__(self, api_base_url, mq_config=None, warc_base_path=None):
         BaseExporter.__init__(self, api_base_url, TwitterRestWarcIter, TwitterStatusTable, mq_config=mq_config,
