@@ -281,11 +281,6 @@ class TestTwitterHarvester(tests.TestCase):
         self.assertSetEqual(set(),
                             harvester.harvest_result.urls_as_set())
 
-            # TODO: Test providing options.
-    # TODO: Test default options.
-    # TODO: Test extract web resoures.
-    # TODO: Test extract media.
-    # TODO: Test ignore tweets.
 
 @unittest.skipIf(not tests.test_config_available, "Skipping test since test config not available.")
 @unittest.skipIf(not tests.integration_env_available, "Skipping test since integration env not available.")
@@ -341,6 +336,11 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             },
             "collection": {
                 "id": "test_collection"
+            },
+            "options": {
+                "web_resources": True,
+                "media": True,
+                "tweets": True
             }
         }
         with self._create_connection() as connection:
@@ -401,6 +401,11 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             },
             "collection": {
                 "id": "test_collection"
+            },
+            "options": {
+                "web_resources": True,
+                "media": True,
+                "tweets": True
             }
         }
         with self._create_connection() as connection:
@@ -457,6 +462,11 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             },
             "collection": {
                 "id": "test_collection"
+            },
+            "options": {
+                "web_resources": True,
+                "media": True,
+                "tweets": True
             }
         }
         with self._create_connection() as connection:
