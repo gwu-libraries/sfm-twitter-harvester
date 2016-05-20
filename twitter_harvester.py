@@ -58,7 +58,7 @@ class TwitterHarvester(BaseHarvester):
 
             max_tweet_id = self._process_tweets(self.twarc.search(query, since_id=since_id))
             log.debug("Searching on %s since %s returned %s tweets.", query,
-                      since_id, self.harvest_result.summary.get("tweet"))
+                      since_id, self.harvest_result.stats_summary().get("tweets"))
 
             # Update state store
             if incremental and max_tweet_id:
@@ -108,10 +108,9 @@ class TwitterHarvester(BaseHarvester):
 
             max_tweet_id = self._process_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
             log.debug("Timeline for %s since %s returned %s tweets.", user_id,
-                      since_id, self.harvest_result.summary.get("tweet"))
+                      since_id, self.harvest_result.stats_summary().get("tweets"))
 
             # Update state store
-            log.info("IS INCREMENTAL: %s", incremental)
             if incremental and max_tweet_id:
                 self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
 
@@ -145,7 +144,7 @@ class TwitterHarvester(BaseHarvester):
                 break
             if "text" in tweet:
                 max_tweet_id = max(max_tweet_id, tweet.get("id"))
-                self.harvest_result.increment_summary("tweet")
+                self.harvest_result.increment_stats("tweets")
                 # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
                 status = tweet
                 if "retweeted_status" in tweet:

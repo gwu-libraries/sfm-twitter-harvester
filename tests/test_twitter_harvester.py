@@ -8,7 +8,7 @@ import threading
 import shutil
 import tempfile
 import time
-from datetime import datetime
+from datetime import datetime, date
 import copy
 from kombu import Connection, Exchange, Queue, Producer
 from tests.tweets import *
@@ -94,7 +94,7 @@ class TestTwitterHarvester(tests.TestCase):
         harvester.harvest_result_lock = threading.Lock()
         harvester.harvest_seeds()
 
-        self.assertDictEqual({"tweet": 2}, harvester.harvest_result.summary)
+        self.assertDictEqual({"tweets": 2}, harvester.harvest_result.stats_summary())
         self.assertSetEqual({"http://bit.ly/1ipwd0B"}, harvester.harvest_result.urls_as_set())
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
@@ -125,7 +125,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         harvester.harvest_seeds()
 
-        self.assertDictEqual({"tweet": 1}, harvester.harvest_result.summary)
+        self.assertDictEqual({"tweets": 1}, harvester.harvest_result.stats_summary())
         self.assertSetEqual({"http://bit.ly/1ipwd0B"}, harvester.harvest_result.urls_as_set())
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
@@ -153,7 +153,7 @@ class TestTwitterHarvester(tests.TestCase):
         harvester.harvest_result_lock = threading.Lock()
         harvester.harvest_seeds()
 
-        self.assertDictEqual({"tweet": 2}, harvester.harvest_result.summary)
+        self.assertDictEqual({"tweets": 2}, harvester.harvest_result.stats_summary())
         self.assertSetEqual({"http://bit.ly/1ipwd0B"}, harvester.harvest_result.urls_as_set())
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
@@ -187,7 +187,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         harvester.harvest_seeds()
 
-        self.assertDictEqual({"tweet": 1}, harvester.harvest_result.summary)
+        self.assertDictEqual({"tweets": 1}, harvester.harvest_result.stats_summary())
         self.assertSetEqual({"http://bit.ly/1ipwd0B"}, harvester.harvest_result.urls_as_set())
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
@@ -363,7 +363,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Success
             self.assertEqual("completed success", result_msg["status"])
             # Some tweets
-            self.assertTrue(result_msg["summary"]["tweet"])
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweet"])
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
@@ -437,7 +437,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Success
             self.assertEqual("completed success", result_msg["status"])
             # Some tweets
-            self.assertTrue(result_msg["summary"]["tweet"])
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweet"])
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
@@ -498,7 +498,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Success
             self.assertEqual("completed success", result_msg["status"])
             # Some tweets
-            self.assertTrue(result_msg["summary"]["tweet"])
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
