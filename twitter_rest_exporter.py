@@ -1,4 +1,4 @@
-from sfmutils.exporter import ExportResult, BaseExporter, BaseTable
+from sfmutils.exporter import BaseExporter, BaseTable
 from twitter_rest_warc_iter import TwitterRestWarcIter
 import logging
 from dateutil.parser import parse as date_parse
@@ -11,12 +11,12 @@ SEARCH_ROUTING_KEY = "export.start.twitter.twitter_search"
 TIMELINE_ROUTING_KEY = "export.start.twitter.twitter_user_timeline"
 
 
-class TwitterStatusTable(BaseTable):
+class BaseTwitterStatusTable(BaseTable):
     """
     PETL Table for Twitter statuses.
     """
-    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids):
-        BaseTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, TwitterRestWarcIter)
+    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls):
+        BaseTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls)
 
     def _header_row(self):
         return ('created_at', 'twitter_id',
@@ -46,9 +46,15 @@ class TwitterStatusTable(BaseTable):
         return "twitter_id"
 
 
+class TwitterRestStatusTable(BaseTwitterStatusTable):
+    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids):
+        BaseTwitterStatusTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
+                                        TwitterRestWarcIter)
+
+
 class TwitterRestExporter(BaseExporter):
     def __init__(self, api_base_url, mq_config=None, warc_base_path=None):
-        BaseExporter.__init__(self, api_base_url, TwitterRestWarcIter, TwitterStatusTable, mq_config=mq_config,
+        BaseExporter.__init__(self, api_base_url, TwitterRestWarcIter, TwitterRestStatusTable, mq_config=mq_config,
                               warc_base_path=warc_base_path)
 
 

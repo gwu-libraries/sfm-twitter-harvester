@@ -1,13 +1,13 @@
 from __future__ import absolute_import
 import tests
 from tests.tweets import tweet2
-from twitter_rest_exporter import TwitterStatusTable
+from twitter_rest_exporter import TwitterRestStatusTable
 from datetime import datetime
 
 
 class TestTwitterStatusTable(tests.TestCase):
     def test_row(self):
-        table = TwitterStatusTable(None, None, None, None, None)
+        table = TwitterRestStatusTable(None, None, None, None, None)
         row = table._row(tweet2)
         self.assertIsInstance(row[0], datetime)
         self.assertEqual("660065173563158529", row[1])
