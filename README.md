@@ -1,5 +1,5 @@
 # sfm-twitter-harvester
-Harvesters for twitter content as part of [Social Feed Manager](https://gwu-libraries.github.io/sfm-ui).
+Harvesters for twitter content as part of [Social Feed Manager](http://gwu-libraries.github.io/sfm-ui).
 
 [![Build Status](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester.svg?branch=master)](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester)
 
