@@ -363,7 +363,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Success
             self.assertEqual("completed success", result_msg["status"])
             # Some tweets
-            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweet"])
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
@@ -437,7 +437,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Success
             self.assertEqual("completed success", result_msg["status"])
             # Some tweets
-            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweet"])
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
 
             # Web harvest message.
             bound_web_harvest_queue = self.web_harvest_queue(connection)
