@@ -12,7 +12,8 @@ setup(
     scripts=['twitter_harvester.py',
              'twitter_rest_warc_iter.py',
              'twitter_stream_warc_iter.py'],
-    install_requires=['sfmutils'],
+    install_requires=['sfmutils',
+                      'python-dateutil>=2.4.2'],
     tests_require=['mock>=1.3.0'],
     classifiers=[
         'Intended Audience :: Developers',
