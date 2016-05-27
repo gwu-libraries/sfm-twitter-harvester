@@ -2,7 +2,7 @@ FROM python@sha256:ad39551743b356efda7c61f46019b97d49d1aab01b97f0e6d87c9b34326f3
 #Python 2.7
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
-ENV sfm_harvester_version 0.3.0
+ENV sfm_harvester_version 0.4.0
 ADD https://raw.githubusercontent.com/gwu-libraries/sfm-twitter-harvester/${sfm_harvester_version}/requirements/requirements.apt /tmp/
 RUN apt-get update && apt-get install -y \
     zip=3.0-8
