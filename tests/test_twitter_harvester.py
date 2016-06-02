@@ -18,7 +18,7 @@ from sfmutils.harvester import HarvestResult, EXCHANGE
 base_search_message = {
     "id": "test:1",
     "type": "twitter_search",
-    "path": "/collections/test_collection/seedset_id",
+    "path": "/collections/test_collection_set/collection_id",
     "seeds": [
         {
             "token": "gwu"
@@ -39,15 +39,15 @@ base_search_message = {
         "media": True,
         "tweets": True
     },
-    "collection": {
-        "id": "test_collection"
+    "collection_set": {
+        "id": "test_collection_set"
     }
 }
 
 base_timeline_message = {
     "id": "test:1",
     "type": "twitter_user_timeline",
-    "path": "/collections/test_collection/seedset_id",
+    "path": "/collections/test_collection_set/collection_id",
     "seeds": [
         {
             "id": "seed_id1",
@@ -70,8 +70,8 @@ base_timeline_message = {
         "access_token": tests.TWITTER_ACCESS_TOKEN,
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
     },
-    "collection": {
-        "id": "test_collection"
+    "collection_set": {
+        "id": "test_collection_set"
     }
 }
 
@@ -334,8 +334,8 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token": tests.TWITTER_ACCESS_TOKEN,
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
-            "collection": {
-                "id": "test_collection"
+            "collection_set": {
+                "id": "test_collection_set"
             },
             "options": {
                 "web_resources": True,
@@ -399,8 +399,8 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token": tests.TWITTER_ACCESS_TOKEN,
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
-            "collection": {
-                "id": "test_collection"
+            "collection_set": {
+                "id": "test_collection_set"
             },
             "options": {
                 "web_resources": True,
@@ -460,8 +460,8 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "access_token": tests.TWITTER_ACCESS_TOKEN,
                 "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
             },
-            "collection": {
-                "id": "test_collection"
+            "collection_set": {
+                "id": "test_collection_set"
             },
             "options": {
                 "web_resources": True,

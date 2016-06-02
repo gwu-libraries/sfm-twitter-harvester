@@ -21,5 +21,5 @@ class TestTwitterRestWarcIter(tests.TestCase):
         warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("481186914", "999999"))
         self.assertEquals(244, len(list(warc_iter)))
 
-        warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("999999"))
+        warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("999999",))
         self.assertEquals(0, len(list(warc_iter)))
