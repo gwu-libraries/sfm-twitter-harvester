@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='sfmtwitterharvester',
-    version='0.4.1',
+    version='1.0.0',
     url='https://github.com/gwu-libraries/sfm-twitter-harvester',
     author='Justin Littman',
     author_email='justinlittman@gmail.com',
