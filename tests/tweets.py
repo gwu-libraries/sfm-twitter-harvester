@@ -517,7 +517,17 @@ tweet4 = {
             "indices": [18, 41],
             "expanded_url": "https://twitter.com/justin_littman/status/503873833213104128",
             "display_url": "twitter.com/justin_littman\u2026"
-        }]
+        },
+        {
+            "url": "https://t.co/6zD9PKIhKP",
+            "expanded_url": "http://bit.ly/1NoNeBF",
+            "display_url": "bit.ly/1NoNeBF",
+            "indices": [
+                41,
+                64
+            ]
+        }
+        ]
     },
     "in_reply_to_screen_name": None,
     "in_reply_to_user_id": None,

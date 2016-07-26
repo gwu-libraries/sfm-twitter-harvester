@@ -251,7 +251,8 @@ class TestTwitterHarvester(tests.TestCase):
 
         harvester._process_tweets([tweet2, tweet3, tweet4, tweet5])
         self.assertSetEqual({'http://bit.ly/1ipwd0B',  # url
-                             'http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html'  # from retweet
+                             'http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html',  # from retweet
+                             'http://bit.ly/1NoNeBF'  # from base tweet of quoted status
                              },
                             harvester.harvest_result.urls_as_set())
 
@@ -266,9 +267,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.assertSetEqual({
             'http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg',  # media/extended entity
             'http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg',  # from quoted status
-
-        },
-            harvester.harvest_result.urls_as_set())
+        }, harvester.harvest_result.urls_as_set())
 
     def test_default_harvest_options(self):
         harvester = TwitterHarvester()

@@ -2,6 +2,8 @@
 
 from __future__ import absolute_import
 import logging
+import re
+
 from twarc import Twarc
 from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND
 
@@ -11,6 +13,7 @@ QUEUE = "twitter_rest_harvester"
 SEARCH_ROUTING_KEY = "harvest.start.twitter.twitter_search"
 TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 
+status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
 class TwitterHarvester(BaseHarvester):
     def __init__(self, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False):
@@ -146,19 +149,22 @@ class TwitterHarvester(BaseHarvester):
                 max_tweet_id = max(max_tweet_id, tweet.get("id"))
                 self.harvest_result.increment_stats("tweets")
                 # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
-                status = tweet
+                statuses = [tweet]
                 if "retweeted_status" in tweet:
-                    status = tweet["retweeted_status"]
+                    statuses.append(tweet["retweeted_status"])
                 elif "quoted_status" in tweet:
-                    status = tweet["quoted_status"]
-                self._process_entities(status.get("entities", {}))
-                self._process_entities(status.get("extended_entities", {}))
+                    statuses.append(tweet["quoted_status"])
+                for status in statuses:
+                    self._process_entities(status.get("entities", {}))
+                    self._process_entities(status.get("extended_entities", {}))
         return max_tweet_id
 
     def _process_entities(self, entities):
         if self.extract_web_resources:
             for url in entities.get("urls", []):
-                self.harvest_result.urls.append(url["expanded_url"])
+                # Exclude links for tweets
+                if not status_re.match(url["expanded_url"]):
+                    self.harvest_result.urls.append(url["expanded_url"])
         if self.extract_media:
             for media in entities.get("media", []):
                 self.harvest_result.urls.append(media["media_url"])
