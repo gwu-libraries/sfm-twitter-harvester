@@ -5,7 +5,8 @@ import logging
 import re
 
 from twarc import Twarc
-from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND
+from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED
+from requests.exceptions import HTTPError
 
 log = logging.getLogger(__name__)
 
@@ -86,6 +87,7 @@ class TwitterHarvester(BaseHarvester):
             seed_id = seed["id"]
             screen_name = seed.get("token")
             user_id = seed.get("uid")
+            log.debug("Processing seed (%s) with screen name %s and user id %s", seed_id, screen_name, user_id)
             assert screen_name or user_id
 
             # If there is not a user_id, look it up.
@@ -98,24 +100,36 @@ class TwitterHarvester(BaseHarvester):
                     msg = "User id not found for user {}".format(screen_name)
                     log.exception(msg)
                     self.harvest_result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
-                    return
             # Otherwise, get the current screen_name
             else:
                 new_screen_name = self._lookup_screen_name(user_id)
                 if new_screen_name != screen_name:
                     self.harvest_result.token_updates[seed_id] = new_screen_name
+                    screen_name = new_screen_name
 
-            # Get since_id from state_store
-            since_id = self.state_store.get_state(__name__,
-                                                  "timeline.{}.since_id".format(user_id)) if incremental else None
+            if user_id:
+                try:
+                    # Get since_id from state_store
+                    since_id = self.state_store.get_state(__name__,
+                                                          "timeline.{}.since_id".format(
+                                                              user_id)) if incremental else None
 
-            max_tweet_id = self._process_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
-            log.debug("Timeline for %s since %s returned %s tweets.", user_id,
-                      since_id, self.harvest_result.stats_summary().get("tweets"))
+                    max_tweet_id = self._process_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
 
-            # Update state store
-            if incremental and max_tweet_id:
-                self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
+                    log.debug("Timeline for %s since %s returned %s tweets.", user_id,
+                              since_id, self.harvest_result.stats_summary().get("tweets"))
+
+                    # Update state store
+                    if incremental and max_tweet_id:
+                        self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
+
+                except HTTPError as e:
+                    if e.response.status_code == 401:
+                        msg = "Unauthorized for user {} probably because account is private".format(screen_name)
+                        log.exception(msg)
+                        self.harvest_result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
+                    else:
+                        raise e
 
     def _lookup_screen_name(self, user_id):
         """
