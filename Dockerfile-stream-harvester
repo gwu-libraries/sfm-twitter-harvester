@@ -1,5 +1,5 @@
 FROM gwul/sfm-base@sha256:74fbacb81df7bb26f3efb67074b4b3fc2447bfd876d7197f932d08386cc068d0
-MAINTAINER Vict Tan <ychtan@email.gwu.edu>
+MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 # Install supervisor
 RUN apt-get update && apt-get install -y \
