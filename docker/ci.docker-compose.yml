@@ -7,8 +7,7 @@ services:
           - RABBITMQ_DEFAULT_USER=sfm_user
           - RABBITMQ_DEFAULT_PASS=password
   sfmtwitterrestharvester:
-#      image: gwul/sfm-twitter-rest-harvester:master
-      image: docker_sfmtwitterrestharvester
+      image: gwul/sfm-twitter-rest-harvester:master
       links:
           - sfmrabbit:mq
       volumes:
@@ -23,8 +22,7 @@ services:
           - RABBITMQ_USER=sfm_user
           - RABBITMQ_PASSWORD=password
   sfmtwitterstreamharvester:
-#      image: gwul/sfm-twitter-stream-harvester:master
-      image: docker_sfmtwitterstreamharvester
+      image: gwul/sfm-twitter-stream-harvester:master
       links:
           - sfmrabbit:mq
       volumes:
