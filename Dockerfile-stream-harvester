@@ -1,0 +1,16 @@
+FROM gwul/sfm-base@sha256:74fbacb81df7bb26f3efb67074b4b3fc2447bfd876d7197f932d08386cc068d0
+MAINTAINER Vict Tan <ychtan@email.gwu.edu>
+
+# Install supervisor
+RUN apt-get update && apt-get install -y \
+    supervisor=3.0r1-1
+VOLUME /etc/supervisor/conf.d
+
+ADD . /opt/sfm-twitter-harvester/
+WORKDIR /opt/sfm-twitter-harvester
+RUN pip install -r requirements/common.txt -r requirements/release.txt
+
+CMD sh /opt/sfm-setup/setup_reqs.sh \
+    && appdeps.py --port-wait mq:5672 \
+    && supervisord -c /etc/supervisor/supervisord.conf \
+    && stream_consumer.py mq $RABBITMQ_USER $RABBITMQ_PASSWORD twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter.twitter_sample /opt/sfm-twitter-harvester/twitter_harvester.py --debug=$DEBUG

@@ -1,3 +1,2 @@
--r common.txt
 -e ../warcprox
 -e ../sfm-utils

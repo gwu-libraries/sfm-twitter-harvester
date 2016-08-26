@@ -21,8 +21,8 @@ try:
 except socket.error:
     mq_port_available = False
 
-mq_username = os.environ.get("MQ_ENV_RABBITMQ_DEFAULT_USER")
-mq_password = os.environ.get("MQ_ENV_RABBITMQ_DEFAULT_PASS")
+mq_username = os.environ.get("RABBITMQ_USER")
+mq_password = os.environ.get("RABBITMQ_PASSWORD")
 integration_env_available = mq_port_available and mq_username and mq_password
 
 
