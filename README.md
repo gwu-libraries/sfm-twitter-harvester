@@ -7,16 +7,17 @@ Provides harvesters for Twitter [REST API](https://dev.twitter.com/rest/public) 
 
 Harvesting is performed by [Twarc](https://github.com/edsu/twarc) and captured by a modified version of [WarcProx](https://github.com/gwu-libraries/warcprox).
 
-## Installing
-    git clone https://github.com/gwu-libraries/sfm-twitter-harvester.git
-    cd sfm-twitter-harvester
-    pip install -r requirements/requirements.txt
+## Development
 
-Note that `requirements/requirements.txt` references the latest releast of warcprox-gwu and sfm-utils.
-If you are doing development on the interaction between warcprox-gwu, sfm-utils, and sfm-twitter-harvester,
-use `requirements/dev.txt`. This uses a local copy of warcprox-gwu (`../warcprox`) and sfm-utils (`../sfm-utils`)
-in editable mode.
+For information on development and running tests, see the [development documentation](http://sfm.readthedocs.io/en/latest/development.html).
 
+When running tests, provide Twitter credentials either as a `test_config.py` file or environment variables (`TWITTER_CONSUMER_KEY`,
+`TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN` and `TWITTER_ACCESS_TOKEN_SECRET`).  An example `test_config.py` looks like:
+
+        TWITTER_CONSUMER_KEY = "EHdoTksBfgGflP5nUalEfhaeo"
+        TWITTER_CONSUMER_SECRET = "ZtUpemtBkf2cEmaqiy52Dd343ihFu9PAiLebuMOmqN0QtXeAlen"
+        TWITTER_ACCESS_TOKEN = "411876914-c2yZjbk1np0Z5MWEFYYQKSQNFFGBXd8T4k90YkJl"
+        TWITTER_ACCESS_TOKEN_SECRET = "jK9QOmn5VRF5mfgAN6
 
 ## Running as a service
 ### Running as a service for the REST API.
@@ -36,33 +37,6 @@ The twitter harvester can process harvest start files. The format of a harvest s
 
     python twitter_harvester.py seed <path to file>
 
-## Tests
-
-### Unit tests
-    python -m unittest discover
-
-### Integration tests (inside docker containers)
-1. Install [Docker](https://docs.docker.com/installation/) and [Docker-Compose](https://docs.docker.com/compose/install/).
-2. Get a [twitter api key](https://apps.twitter.com/) and provide the key and secret to the tests. This can be done either by putting them in a file named `test_config.py` or in environment variables (`TWITTER_CONSUMER_KEY`,  `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN` and `TWITTER_ACCESS_TOKEN_SECRET`).  An example `test_config.py` looks like:
-
-        TWITTER_CONSUMER_KEY = "EHdoTksBfgGflP5nUalEfhaeo"
-        TWITTER_CONSUMER_SECRET = "ZtUpemtBkf2cEmaqiy52Dd343ihFu9PAiLebuMOmqN0QtXeAlen"
-        TWITTER_ACCESS_TOKEN = "411876914-c2yZjbk1np0Z5MWEFYYQKSQNFFGBXd8T4k90YkJl"
-        TWITTER_ACCESS_TOKEN_SECRET = "jK9QOmn5VRF5mfgAN6KgfmCKRqThXVQ1G6qQg8BCejvp"
-
-2. Start up the containers.
-
-        docker-compose -f docker/dev.docker-compose.yml up -d
-
-3. Run the tests.
-
-        docker exec docker_sfmtwitterstreamharvester_1 python -m unittest discover
-
-4. Shutdown containers.
-
-        docker-compose -f docker/dev.docker-compose.yml kill
-        docker-compose -f docker/dev.docker-compose.yml rm -v --force
-        
 
 ## Harvest start messages
 Following is information necessary to construct a harvest start message for the twitter harvester.
