@@ -125,7 +125,7 @@ class TwitterHarvester(BaseHarvester):
 
                 except HTTPError as e:
                     if e.response.status_code == 401:
-                        msg = "Unauthorized for user {} probably because account is private".format(screen_name)
+                        msg = "Unauthorized for user {} because account is suspended or private".format(screen_name)
                         log.exception(msg)
                         self.harvest_result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
                     else:
