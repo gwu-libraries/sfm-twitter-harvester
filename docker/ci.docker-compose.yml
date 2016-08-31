@@ -21,6 +21,7 @@ services:
           - DEBUG=true
           - RABBITMQ_USER=sfm_user
           - RABBITMQ_PASSWORD=password
+          - SFM_REQS=master
   sfmtwitterstreamharvester:
       image: gwul/sfm-twitter-stream-harvester:master
       links:
@@ -36,3 +37,4 @@ services:
           - DEBUG=true
           - RABBITMQ_USER=sfm_user
           - RABBITMQ_PASSWORD=password
+          - SFM_REQS=master
