@@ -6,6 +6,8 @@ import re
 
 from twarc import Twarc
 from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED
+from twitter_stream_warc_iter import TwitterStreamWarcIter
+from twitter_rest_warc_iter import TwitterRestWarcIter
 from requests.exceptions import HTTPError
 
 log = logging.getLogger(__name__)
@@ -16,9 +18,11 @@ TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 
 status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
+
 class TwitterHarvester(BaseHarvester):
-    def __init__(self, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False):
-        BaseHarvester.__init__(self, mq_config=mq_config, stream_restart_interval_secs=stream_restart_interval_secs,
+    def __init__(self, working_path, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False):
+        BaseHarvester.__init__(self, working_path, mq_config=mq_config,
+                               stream_restart_interval_secs=stream_restart_interval_secs,
                                debug=debug)
         self.twarc = None
         self.extract_media = False
@@ -53,20 +57,14 @@ class TwitterHarvester(BaseHarvester):
                            self.message["credentials"]["access_token_secret"])
 
     def search(self):
+        assert len(self.message.get("seeds", [])) == 1
+
         incremental = self.message.get("options", {}).get("incremental", False)
+        query = self.message["seeds"][0]["token"]
 
-        for seed in self.message.get("seeds", []):
-            query = seed.get("token")
-            # Get since_id from state_store
-            since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
+        since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
 
-            max_tweet_id = self._process_tweets(self.twarc.search(query, since_id=since_id))
-            log.debug("Searching on %s since %s returned %s tweets.", query,
-                      since_id, self.harvest_result.stats_summary().get("tweets"))
-
-            # Update state store
-            if incremental and max_tweet_id:
-                self.state_store.set_state(__name__, u"{}.since_id".format(query), max_tweet_id)
+        self._harvest_tweets(self.twarc.search(query, since_id=since_id))
 
     def filter(self):
         assert len(self.message.get("seeds", [])) == 1
@@ -75,10 +73,10 @@ class TwitterHarvester(BaseHarvester):
         follow = self.message["seeds"][0]["token"].get("follow")
         locations = self.message["seeds"][0]["token"].get("locations")
 
-        self._process_tweets(self.twarc.filter(track=track, follow=follow, locations=locations))
+        self._harvest_tweets(self.twarc.filter(track=track, follow=follow, locations=locations))
 
     def sample(self):
-        self._process_tweets(self.twarc.sample())
+        self._harvest_tweets(self.twarc.sample())
 
     def user_timeline(self):
         incremental = self.message.get("options", {}).get("incremental", False)
@@ -95,16 +93,16 @@ class TwitterHarvester(BaseHarvester):
                 user_id = self._lookup_user_id(screen_name)
                 if user_id:
                     # Report back if nsid found
-                    self.harvest_result.uids[seed_id] = user_id
+                    self.result.uids[seed_id] = user_id
                 else:
                     msg = "User id not found for user {}".format(screen_name)
                     log.exception(msg)
-                    self.harvest_result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
+                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
             # Otherwise, get the current screen_name
             else:
                 new_screen_name = self._lookup_screen_name(user_id)
                 if new_screen_name != screen_name:
-                    self.harvest_result.token_updates[seed_id] = new_screen_name
+                    self.result.token_updates[seed_id] = new_screen_name
                     screen_name = new_screen_name
 
             if user_id:
@@ -114,20 +112,13 @@ class TwitterHarvester(BaseHarvester):
                                                           "timeline.{}.since_id".format(
                                                               user_id)) if incremental else None
 
-                    max_tweet_id = self._process_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
-
-                    log.debug("Timeline for %s since %s returned %s tweets.", user_id,
-                              since_id, self.harvest_result.stats_summary().get("tweets"))
-
-                    # Update state store
-                    if incremental and max_tweet_id:
-                        self.state_store.set_state(__name__, "timeline.{}.since_id".format(user_id), max_tweet_id)
+                    self._harvest_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
 
                 except HTTPError as e:
                     if e.response.status_code == 401:
                         msg = "Unauthorized for user {} because account is suspended or private".format(screen_name)
                         log.exception(msg)
-                        self.harvest_result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
+                        self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
                     else:
                         raise e
 
@@ -151,37 +142,92 @@ class TwitterHarvester(BaseHarvester):
             return users[0]["id_str"]
         return None
 
-    def _process_tweets(self, tweets):
-        max_tweet_id = None
+    def _harvest_tweets(self, tweets):
+        # max_tweet_id = None
         for count, tweet in enumerate(tweets):
             if not count % 100:
-                log.debug("Processed %s tweets", count)
-            if self.stop_event.is_set():
+                log.debug("Harvested %s tweets", count)
+            self.result.harvest_counter["tweets"] += 1
+            if self.stop_harvest_seeds_event.is_set():
                 log.debug("Stopping since stop event set.")
                 break
-            if "text" in tweet:
-                max_tweet_id = max(max_tweet_id, tweet.get("id"))
-                self.harvest_result.increment_stats("tweets")
-                # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
-                statuses = [tweet]
-                if "retweeted_status" in tweet:
-                    statuses.append(tweet["retweeted_status"])
-                elif "quoted_status" in tweet:
-                    statuses.append(tweet["quoted_status"])
-                for status in statuses:
-                    self._process_entities(status.get("entities", {}))
-                    self._process_entities(status.get("extended_entities", {}))
-        return max_tweet_id
 
     def _process_entities(self, entities):
         if self.extract_web_resources:
             for url in entities.get("urls", []):
                 # Exclude links for tweets
                 if not status_re.match(url["expanded_url"]):
-                    self.harvest_result.urls.append(url["expanded_url"])
+                    self.result.urls.append(url["expanded_url"])
         if self.extract_media:
             for media in entities.get("media", []):
-                self.harvest_result.urls.append(media["media_url"])
+                self.result.urls.append(media["media_url"])
+
+    def process_warc(self, warc_filepath):
+        # Dispatch message based on type.
+        harvest_type = self.message.get("type")
+        log.debug("Harvest type is %s", harvest_type)
+        if harvest_type == "twitter_search":
+            self.process_search_warc(warc_filepath)
+        elif harvest_type == "twitter_filter":
+            self._process_tweets(TwitterStreamWarcIter(warc_filepath))
+        elif harvest_type == "twitter_sample":
+            self._process_tweets(TwitterStreamWarcIter(warc_filepath))
+        elif harvest_type == "twitter_user_timeline":
+            self.process_user_timeline_warc(warc_filepath)
+        else:
+            raise KeyError
+
+    def process_search_warc(self, warc_filepath):
+        incremental = self.message.get("options", {}).get("incremental", False)
+        query = self.message["seeds"][0]["token"]
+
+        since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
+
+        max_tweet_id = self._process_tweets(TwitterRestWarcIter(warc_filepath))
+
+        # Update state store
+        if incremental and max_tweet_id > since_id:
+            self.state_store.set_state(__name__, u"{}.since_id".format(query), max_tweet_id)
+
+    def process_user_timeline_warc(self, warc_filepath):
+        incremental = self.message.get("options", {}).get("incremental", False)
+
+        for count, status in enumerate(TwitterRestWarcIter(warc_filepath)):
+            tweet = status.item
+            if not count % 100:
+                log.debug("Processing %s tweets", count)
+            if "text" in tweet:
+                user_id = tweet["user"]["id_str"]
+                if incremental:
+                    # Update state
+                    key = "timeline.{}.since_id".format(user_id)
+                    self.state_store.set_state(__name__, key,
+                                               max(self.state_store.get_state(__name__, key), tweet.get("id")))
+                self._process_tweet(tweet)
+
+    def _process_tweets(self, warc_iter):
+        max_tweet_id = None
+        for count, status in enumerate(warc_iter):
+            tweet = status.item
+            if not count % 100:
+                log.debug("Processing %s tweets", count)
+            if "text" in tweet:
+                max_tweet_id = max(max_tweet_id, tweet.get("id"))
+                self._process_tweet(tweet)
+        return max_tweet_id
+
+    def _process_tweet(self, tweet):
+        self.result.increment_stats("tweets")
+        # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
+        statuses = [tweet]
+        if "retweeted_status" in tweet:
+            statuses.append(tweet["retweeted_status"])
+        elif "quoted_status" in tweet:
+            statuses.append(tweet["quoted_status"])
+        for status in statuses:
+            self._process_entities(status.get("entities", {}))
+            self._process_entities(status.get("extended_entities", {}))
+
 
 if __name__ == "__main__":
     TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY])

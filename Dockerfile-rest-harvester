@@ -7,4 +7,4 @@ RUN pip install -r requirements/common.txt -r requirements/release.txt
 
 CMD sh /opt/sfm-setup/setup_reqs.sh \
     && appdeps.py --port-wait mq:5672 \
-    && python twitter_harvester.py --debug=$DEBUG service mq $RABBITMQ_USER $RABBITMQ_PASSWORD
+    && python twitter_harvester.py --debug=$DEBUG service mq $RABBITMQ_USER $RABBITMQ_PASSWORD /sfm-data/containers/$HOSTNAME
