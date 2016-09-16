@@ -103,7 +103,8 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 http_errors=5, connection_errors=5)
         self.assertEqual([call("gelman", since_id=None)], mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
@@ -122,11 +123,11 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                            tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                            tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                            http_errors=5, connection_errors=5)
         self.assertEqual([call("gelman", since_id=605726286741434400)],
                          mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
-
 
     @patch("twitter_harvester.Twarc", autospec=True)
     def test_user_timeline(self, mock_twarc_class):
@@ -142,7 +143,8 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 http_errors=5, connection_errors=5)
         self.assertEqual([call(user_id="28101965", since_id=None), call(user_id="9710852", since_id=None)],
                          mock_twarc.timeline.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
@@ -165,7 +167,8 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                            tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                            tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                            http_errors=5, connection_errors=5)
         self.assertEqual(
             [call(user_id="28101965", since_id=605726286741434400), call(user_id="9710852", since_id=None)],
             mock_twarc.timeline.mock_calls)
@@ -195,7 +198,8 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 http_errors=5, connection_errors=5)
 
         self.assertEqual([call(screen_names=("missing1",)), call(screen_names=("missing2",))],
                          mock_twarc.user_lookup.mock_calls)
@@ -218,7 +222,8 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.harvest_seeds()
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET)
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 http_errors=5, connection_errors=5)
         self.assertEqual([call(user_id="28101965", since_id=None), call(user_id="9710852", since_id=None)],
                          mock_twarc.timeline.mock_calls)
         self.assertEqual(1, len(self.harvester.result.warnings))
