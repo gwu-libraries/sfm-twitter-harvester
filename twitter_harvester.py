@@ -21,10 +21,10 @@ status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
 class TwitterHarvester(BaseHarvester):
     def __init__(self, working_path, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False,
-                 connection_errors=5, http_errors=5):
+                 connection_errors=5, http_errors=5, debug_warcprox=False):
         BaseHarvester.__init__(self, working_path, mq_config=mq_config,
                                stream_restart_interval_secs=stream_restart_interval_secs,
-                               debug=debug)
+                               debug=debug, debug_warcprox=debug_warcprox)
         self.twarc = None
         self.connection_errors = connection_errors
         self.http_errors = http_errors
