@@ -7,4 +7,4 @@ RUN pip install -r requirements/common.txt -r requirements/release.txt
 
 CMD sh /opt/sfm-setup/setup_reqs.sh \
     && appdeps.py --port-wait mq:5672 \
-    && python twitter_harvester.py --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX service mq $RABBITMQ_USER $RABBITMQ_PASSWORD /sfm-data/containers/$HOSTNAME
+    && python twitter_harvester.py --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX service mq $RABBITMQ_USER $RABBITMQ_PASSWORD /sfm-data/containers/$HOSTNAME --tries=$HARVEST_TRIES
