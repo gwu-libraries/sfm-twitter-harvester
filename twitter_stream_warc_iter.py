@@ -15,11 +15,10 @@ class TwitterStreamWarcIter(BaseWarcIter):
 
     def _item_iter(self, url, json_obj):
         # Only want statuses, not deletes, stall_warnings, etc.
-        # TODO: Support returning other message types.
         if "id_str" in json_obj:
             yield "twitter_status", json_obj["id_str"], date_parse(json_obj["created_at"]), json_obj
         else:
-            yield "twitter_status", None, None, None
+            yield None, None, None, json_obj
 
     @staticmethod
     def item_types():
