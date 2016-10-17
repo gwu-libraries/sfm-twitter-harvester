@@ -161,11 +161,12 @@ class TwitterHarvester(BaseHarvester):
         if self.extract_web_resources:
             for url in entities.get("urls", []):
                 # Exclude links for tweets
-                if not status_re.match(url["expanded_url"]):
+                if url["expanded_url"] and not status_re.match(url["expanded_url"]):
                     self.result.urls.append(url["expanded_url"])
         if self.extract_media:
             for media in entities.get("media", []):
-                self.result.urls.append(media["media_url"])
+                if media["media_url"]:
+                    self.result.urls.append(media["media_url"])
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
