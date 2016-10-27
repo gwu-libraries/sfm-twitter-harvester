@@ -18,5 +18,7 @@ class TestTwitterStatusTable(tests.TestCase):
         self.assertEqual("http://twitter.com/justin_littman/status/660065173563158529", row[8])
         self.assertEqual("My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe",
                          row[10])
-        self.assertEqual("https://t.co/OHZki6pXEe", row[11])
-        self.assertEqual("http://bit.ly/1ipwd0B", row[12])
+        self.assertEqual("No", row[11])
+        self.assertEqual("No", row[12])
+        self.assertEqual("https://t.co/OHZki6pXEe", row[13])
+        self.assertEqual("http://bit.ly/1ipwd0B", row[14])
