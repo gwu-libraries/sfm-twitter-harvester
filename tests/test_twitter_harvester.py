@@ -440,6 +440,9 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             "collection_set": {
                 "id": "test_collection_set"
             },
+            "collection": {
+                "id": "test_collection"
+            },
             "options": {
                 "web_resources": True,
                 "media": True,
@@ -498,6 +501,9 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             },
             "collection_set": {
                 "id": "test_collection_set"
+            },
+            "collection": {
+                "id": "test_collection"
             },
             "options": {
                 "web_resources": True,
@@ -559,6 +565,9 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             },
             "collection_set": {
                 "id": "test_collection_set"
+            },
+            "collection": {
+                "id": "test_collection"
             },
             "options": {
                 "web_resources": True,
