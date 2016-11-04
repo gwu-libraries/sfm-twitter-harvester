@@ -30,6 +30,7 @@ class TwitterHarvester(BaseHarvester):
         self.http_errors = http_errors
         self.extract_media = False
         self.extract_web_resources = False
+        self.extract_user_profile_images = False
 
     def harvest_seeds(self):
         # Create a twarc
@@ -38,6 +39,7 @@ class TwitterHarvester(BaseHarvester):
         # Get harvest extract options.
         self.extract_media = self.message.get("options", {}).get("media", False)
         self.extract_web_resources = self.message.get("options", {}).get("web_resources", False)
+        self.extract_user_profile_images = self.message.get("options", {}).get("user_images", False)
 
         # Dispatch message based on type.
         harvest_type = self.message.get("type")
@@ -233,6 +235,11 @@ class TwitterHarvester(BaseHarvester):
         for status in statuses:
             self._process_entities(status.get("entities", {}))
             self._process_entities(status.get("extended_entities", {}))
+        if self.extract_user_profile_images:
+            self.result.urls.append(tweet["user"]["profile_image_url"])
+            self.result.urls.append(tweet["user"]["profile_background_image_url"])
+            if "profile_banner_url" in tweet["user"]:
+                self.result.urls.append(tweet["user"]["profile_banner_url"])
 
 
 if __name__ == "__main__":
