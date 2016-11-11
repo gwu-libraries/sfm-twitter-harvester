@@ -20,5 +20,6 @@ class TestTwitterStatusTable(tests.TestCase):
                          row[10])
         self.assertEqual("No", row[11])
         self.assertEqual("No", row[12])
-        self.assertEqual("https://t.co/OHZki6pXEe", row[13])
-        self.assertEqual("http://bit.ly/1ipwd0B", row[14])
+        self.assertEqual(9, row[14])
+        self.assertEqual("https://t.co/OHZki6pXEe", row[15])
+        self.assertEqual("http://bit.ly/1ipwd0B", row[16])
