@@ -39,6 +39,7 @@ base_search_message = {
     "options": {
         "web_resources": True,
         "media": True,
+        "user_images": True,
         "tweets": True
     },
     "collection_set": {
@@ -64,6 +65,7 @@ base_timeline_message = {
     "options": {
         "web_resources": True,
         "media": True,
+        "user_images": True,
         "tweets": True
     },
     "credentials": {
@@ -277,6 +279,7 @@ class TestTwitterHarvester(tests.TestCase):
     def test_harvest_options_web(self):
         self.harvester.extract_media = False
         self.harvester.extract_web_resources = True
+        self.harvester.extract_user_profile_images = False
         # This would normally be passed a warc iter.
         self.harvester._process_tweets(self._iter_items([tweet2, tweet3, tweet4, tweet5]))
         self.assertSetEqual({'http://bit.ly/1ipwd0B',  # url
@@ -288,11 +291,21 @@ class TestTwitterHarvester(tests.TestCase):
     def test_harvest_options_media(self):
         self.harvester.extract_media = True
         self.harvester.extract_web_resources = False
-
+        self.harvester.extract_user_profile_images = False
         self.harvester._process_tweets(self._iter_items([tweet2, tweet3, tweet4, tweet5]))
         self.assertSetEqual({
             'http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg',  # media/extended entity
             'http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg',  # from quoted status
+        }, self.harvester.result.urls_as_set())
+
+    def test_harvest_options_user__images(self):
+        self.harvester.extract_media = False
+        self.harvester.extract_web_resources = False
+        self.harvester.extract_user_profile_images = True
+        self.harvester._process_tweets(self._iter_items([tweet2]))
+        self.assertSetEqual({
+            'http://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg',
+            'http://abs.twimg.com/images/themes/theme1/bg.png'
         }, self.harvester.result.urls_as_set())
 
     def test_default_harvest_options(self):
