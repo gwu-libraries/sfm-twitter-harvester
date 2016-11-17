@@ -22,7 +22,7 @@ class BaseTwitterStatusTable(BaseTable):
         return ('created_at', 'twitter_id',
                 'screen_name', 'followers_count', 'friends_count',
                 'retweet_count', 'hashtags', 'in_reply_to_screen_name',
-                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count'
+                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count', 'media_url',
                 'url1', 'url1_expanded', 'url2', 'url2_expanded')
 
     def _row(self, item):
@@ -40,7 +40,8 @@ class BaseTwitterStatusTable(BaseTable):
                'Yes' if 'retweeted_status' in item else 'No',
                'Yes' if 'quoted_status_id' in item else 'No',
                ', '.join([user_mentions['screen_name'] for user_mentions in item['entities']['user_mentions']]),
-               item['favorite_count']
+               item['favorite_count'],
+               ', '.join([media_url['media_url'] for media_url in item['entities']['media']])
                ]  # only show up to two urls w/expansions
         for url in item['entities']['urls'][:2]:
             row.extend([url['url'], url['expanded_url']])

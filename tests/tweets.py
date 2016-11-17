@@ -177,6 +177,11 @@ tweet2 = {
         "hashtags": [],
         "symbols": [],
         "user_mentions": [],
+        "media": [
+            {
+                "media_url": ""
+            }
+        ],
         "urls": [
             {
                 "url": "https://t.co/OHZki6pXEe",
