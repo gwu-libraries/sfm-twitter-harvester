@@ -61,7 +61,8 @@ class TwitterHarvester(BaseHarvester):
                            self.message["credentials"]["access_token"],
                            self.message["credentials"]["access_token_secret"],
                            http_errors=self.http_errors,
-                           connection_errors=self.connection_errors)
+                           connection_errors=self.connection_errors,
+                           no_accept_encoding=True)
 
     def search(self):
         assert len(self.message.get("seeds", [])) == 1
