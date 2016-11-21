@@ -23,3 +23,4 @@ class TestTwitterStatusTable(tests.TestCase):
         self.assertEqual(9, row[14])
         self.assertEqual("https://t.co/OHZki6pXEe", row[15])
         self.assertEqual("http://bit.ly/1ipwd0B", row[16])
+        self.assertEqual("", row[17])
