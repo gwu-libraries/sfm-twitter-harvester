@@ -41,15 +41,17 @@ class BaseTwitterStatusTable(BaseTable):
                'Yes' if 'quoted_status_id' in item else 'No',
                ', '.join([user_mentions['screen_name'] for user_mentions in item['entities']['user_mentions']]),
                item['favorite_count']
-               ]  # only show up to two urls w/expansions
+               ]
+        # only show up to two urls w/expansions
         urlslist = []
         for url in item['entities']['urls'][:2]:
             urlslist += [url['url'], url['expanded_url']]
-        # Padding the row if URLs do not take up all 4 columns 
+        # Padding the row if URLs do not take up all 4 columns
         row += urlslist + ['']*(4-len(urlslist))
         if 'media' in item['entities']:
-            for media_url in item['entities']['media']:
-                row += [media_url['media_url']]
+            # Only export the first media_url (haven't yet seen tweets with >1)
+            for media in item['entities']['media'][:1]:
+                row += [media['media_url']]
         return row
 
     def id_field(self):
