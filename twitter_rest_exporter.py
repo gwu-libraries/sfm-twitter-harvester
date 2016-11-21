@@ -46,7 +46,7 @@ class BaseTwitterStatusTable(BaseTable):
         for url in item['entities']['urls'][:2]:
             urlslist += [url['url'], url['expanded_url']]
         # Padding the row if URLs do not take up all 4 columns 
-        row += (urlslist + ['']*(4-len(urlslist)))
+        row += urlslist + ['']*(4-len(urlslist))
         if 'media' in item['entities']:
             for media_url in item['entities']['media']:
                 row += [media_url['media_url']]
