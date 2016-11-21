@@ -22,8 +22,8 @@ class BaseTwitterStatusTable(BaseTable):
         return ('created_at', 'twitter_id',
                 'screen_name', 'followers_count', 'friends_count',
                 'retweet_count', 'hashtags', 'in_reply_to_screen_name',
-                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count', 'media_url',
-                'url1', 'url1_expanded', 'url2', 'url2_expanded')
+                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count',
+                'url1', 'url1_expanded', 'url2', 'url2_expanded', 'media_url')
 
     def _row(self, item):
         row = [date_parse(item["created_at"]),
@@ -40,11 +40,15 @@ class BaseTwitterStatusTable(BaseTable):
                'Yes' if 'retweeted_status' in item else 'No',
                'Yes' if 'quoted_status_id' in item else 'No',
                ', '.join([user_mentions['screen_name'] for user_mentions in item['entities']['user_mentions']]),
-               item['favorite_count'],
-               ', '.join([media_url['media_url'] for media_url in item['entities']['media']])
+               item['favorite_count']
                ]  # only show up to two urls w/expansions
+        urlslist = []
         for url in item['entities']['urls'][:2]:
-            row.extend([url['url'], url['expanded_url']])
+            urlslist += [url['url'], url['expanded_url']]
+        row += (urlslist + ['']*(4-len(urlslist)))
+        if 'media' in item['entities']:
+            for media_url in item['entities']['media']:
+                row += [media_url['media_url']]
         return row
 
     def id_field(self):
