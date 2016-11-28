@@ -1,4 +1,4 @@
-FROM gwul/sfm-base@sha256:74fbacb81df7bb26f3efb67074b4b3fc2447bfd876d7197f932d08386cc068d0
+FROM gwul/sfm-base@sha256:9ba2b7d757cf1a285e9af6fbcc35916155779f2944d3018247176a29e0904973
 MAINTAINER Justin Littman <justinlittman@gwu.edu>
 
 ADD . /opt/sfm-twitter-harvester/
@@ -6,5 +6,5 @@ WORKDIR /opt/sfm-twitter-harvester
 RUN pip install -r requirements/common.txt -r requirements/release.txt
 
 CMD sh /opt/sfm-setup/setup_reqs.sh \
-    && appdeps.py --wait-secs 60 --port-wait mq:5672 \
-    && python twitter_stream_exporter.py --debug=$DEBUG service mq $RABBITMQ_USER $RABBITMQ_PASSWORD http://api /sfm-data/containers/$HOSTNAME
+    && appdeps.py --wait-secs 60 --port-wait mq:5672 --port-wait api:8080 --file-wait /sfm-data/collection_set --file-wait /sfm-data/containers --file-wait /sfm-data/export \
+    && gosu sfm python twitter_stream_exporter.py --debug=$DEBUG service mq $RABBITMQ_USER $RABBITMQ_PASSWORD http://api:8080 /sfm-data/containers/$HOSTNAME
