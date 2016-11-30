@@ -7,7 +7,7 @@ from datetime import datetime
 
 class TestTwitterStatusTable(tests.TestCase):
     def test_row(self):
-        table = TwitterRestStatusTable(None, None, None, None, None)
+        table = TwitterRestStatusTable(None, None, None, None, None, None)
         row = table._row(tweet2)
         self.assertIsInstance(row[0], datetime)
         self.assertEqual("660065173563158529", row[1])

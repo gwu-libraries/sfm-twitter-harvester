@@ -12,9 +12,9 @@ SAMPLE_ROUTING_KEY = "export.start.twitter.twitter_sample"
 
 
 class TwitterStreamStatusTable(BaseTwitterStatusTable):
-    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids):
+    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, segment_row_size=None):
         BaseTwitterStatusTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
-                                        TwitterStreamWarcIter)
+                                        TwitterStreamWarcIter, segment_row_size)
 
 
 class TwitterStreamExporter(BaseExporter):
