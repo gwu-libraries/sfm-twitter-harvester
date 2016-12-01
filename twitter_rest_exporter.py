@@ -15,8 +15,10 @@ class BaseTwitterStatusTable(BaseTable):
     """
     PETL Table for Twitter statuses.
     """
-    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls):
-        BaseTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls)
+    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls,
+                 segment_row_size):
+        BaseTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, warc_iter_cls,
+                          segment_row_size)
 
     def _header_row(self):
         return ('created_at', 'twitter_id',
@@ -59,9 +61,9 @@ class BaseTwitterStatusTable(BaseTable):
 
 
 class TwitterRestStatusTable(BaseTwitterStatusTable):
-    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids):
+    def __init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids, segment_row_size=None):
         BaseTwitterStatusTable.__init__(self, warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
-                                        TwitterRestWarcIter)
+                                        TwitterRestWarcIter, segment_row_size)
 
 
 class TwitterRestExporter(BaseExporter):
