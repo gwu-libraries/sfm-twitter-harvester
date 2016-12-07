@@ -24,7 +24,7 @@ class BaseTwitterStatusTable(BaseTable):
         return ('created_at', 'twitter_id',
                 'screen_name', 'followers_count', 'friends_count',
                 'retweet_count', 'hashtags', 'in_reply_to_screen_name',
-                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count',
+                'twitter_url', 'coordinates', 'text', 'is_retweet', 'is_quote','mentions','favorite_count/like_count',
                 'url1', 'url1_expanded', 'url2', 'url2_expanded', 'media_url')
 
     def _row(self, item):
