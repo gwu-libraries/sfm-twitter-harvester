@@ -428,12 +428,14 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             twitter_rest_harvester_queue(connection).declare()
             twitter_rest_harvester_queue(connection).purge()
 
-        self.harvest_path = tempfile.mkdtemp()
+        self.harvest_path = None
 
     def tearDown(self):
-        shutil.rmtree(self.harvest_path, ignore_errors=True)
+        if self.harvest_path:
+            shutil.rmtree(self.harvest_path, ignore_errors=True)
 
     def test_search(self):
+        self.harvest_path = "/sfm-data/collection_set/test_collection/test_1"
         harvest_msg = {
             "id": "test:1",
             "type": "twitter_search",
@@ -494,6 +496,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
     def test_filter(self):
+        self.harvest_path = "/sfm-data/collection_set/test_collection/test_2"
         harvest_msg = {
             "id": "test:2",
             "type": "twitter_filter",
@@ -566,6 +569,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
     def test_sample(self):
+        self.harvest_path = "/sfm-data/collection_set/test_collection/test_3"
         harvest_msg = {
             "id": "test:3",
             "type": "twitter_sample",

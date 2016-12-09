@@ -6,12 +6,22 @@ services:
           - TZ=America/New_York
           - RABBITMQ_DEFAULT_USER=sfm_user
           - RABBITMQ_DEFAULT_PASS=password
+  data:
+      image: gwul/sfm-data:master
+      volumes:
+           - /sfm-data
+      environment:
+          - TZ=America/New_York
+          - SFM_UID=900
+          - SFM_GID=900
   twitterrestharvester:
       image: gwul/sfm-twitter-rest-harvester:master
       links:
           - rabbit:mq
       volumes:
           - "..:/opt/sfm-twitter-harvester"
+      volumes_from:
+          - data
       environment:
           - TZ=America/New_York
           - TWITTER_CONSUMER_KEY
@@ -23,12 +33,16 @@ services:
           - RABBITMQ_PASSWORD=password
           - SFM_REQS=master
           - HARVEST_TRIES=3
+          - SFM_UID=900
+          - SFM_GID=900
   twitterstreamharvester:
       image: gwul/sfm-twitter-stream-harvester:master
       links:
           - rabbit:mq
       volumes:
           - "..:/opt/sfm-twitter-harvester"
+      volumes_from:
+          - data
       environment:
           - TZ=America/New_York
           - TWITTER_CONSUMER_KEY
@@ -40,3 +54,5 @@ services:
           - RABBITMQ_PASSWORD=password
           - SFM_REQS=master
           - HARVEST_TRIES=3
+          - SFM_UID=900
+          - SFM_GID=900
