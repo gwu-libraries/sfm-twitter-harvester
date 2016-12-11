@@ -38,7 +38,7 @@ class BaseTwitterStatusTable(BaseTable):
                item['in_reply_to_screen_name'] or '',
                'http://twitter.com/{}/status/{}'.format(item["user"]["screen_name"], item["id_str"]),
                str(item['coordinates']['coordinates']) if item['coordinates'] else '',
-               item['text'].replace('\n', ' '),
+               "'"+item['text'].replace('\n', ' ')+"'",
                'Yes' if 'retweeted_status' in item else 'No',
                'Yes' if 'quoted_status_id' in item else 'No',
                ', '.join([user_mentions['screen_name'] for user_mentions in item['entities']['user_mentions']]),
