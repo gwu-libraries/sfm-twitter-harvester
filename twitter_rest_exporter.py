@@ -55,6 +55,8 @@ class BaseTwitterStatusTable(BaseTable):
             # Only export the first media_url (haven't yet seen tweets with >1)
             for media in item['entities']['media'][:1]:
                 row += [media['media_url']]
+        else:
+            row += ['']
         return row
 
     def id_field(self):
