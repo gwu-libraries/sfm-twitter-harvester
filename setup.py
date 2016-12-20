@@ -14,7 +14,7 @@ setup(
              'twitter_stream_warc_iter.py'],
     install_requires=['sfmutils',
                       'python-dateutil>=2.4.2'],
-    tests_require=['mock>=1.4.0'],
+    tests_require=['mock>=1.3.0'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
