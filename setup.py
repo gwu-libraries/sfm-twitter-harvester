@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(
     name='sfmtwitterharvester',
-    version='1.3.1',
+    version='1.4.0',
     url='https://github.com/gwu-libraries/sfm-twitter-harvester',
     author='Justin Littman',
     author_email='justinlittman@gmail.com',
@@ -14,7 +14,7 @@ setup(
              'twitter_stream_warc_iter.py'],
     install_requires=['sfmutils',
                       'python-dateutil>=2.4.2'],
-    tests_require=['mock>=1.3.1'],
+    tests_require=['mock>=1.4.0'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',
