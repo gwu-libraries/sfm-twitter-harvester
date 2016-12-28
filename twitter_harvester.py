@@ -108,7 +108,14 @@ class TwitterHarvester(BaseHarvester):
             # Otherwise, get the current screen_name
             else:
                 new_screen_name = self._lookup_screen_name(user_id)
-                if new_screen_name != screen_name:
+		# if can't find the screen_name, ignore get timeline
+		if not new_screen_name:
+                    msg = "Screen name not found for user {}".format(user_id)
+                    log.exception(msg)
+                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
+		    # reset the user_id, ignore the get timeline
+                    user_id=None
+                if new_screen_name and new_screen_name != screen_name:
                     self.result.token_updates[seed_id] = new_screen_name
                     screen_name = new_screen_name
 
