@@ -80,10 +80,11 @@ class TwitterHarvester(BaseHarvester):
         follow = self.message["seeds"][0]["token"].get("follow")
         locations = self.message["seeds"][0]["token"].get("locations")
 
-        self._harvest_tweets(self.twarc.filter(track=track, follow=follow, locations=locations))
+        self._harvest_tweets(
+            self.twarc.filter(track=track, follow=follow, locations=locations, event=self.stop_harvest_seeds_event))
 
     def sample(self):
-        self._harvest_tweets(self.twarc.sample())
+        self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))
 
     def user_timeline(self):
         incremental = self.message.get("options", {}).get("incremental", False)
@@ -130,7 +131,8 @@ class TwitterHarvester(BaseHarvester):
 
                 except HTTPError as e:
                     if e.response.status_code == 401:
-                        msg = "Unauthorized for user {} (User ID: {}) because account is suspended or private".format(screen_name, user_id)
+                        msg = "Unauthorized for user {} (User ID: {}) because account is suspended or private".format(
+                            screen_name, user_id)
                         log.exception(msg)
                         self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
                     else:
