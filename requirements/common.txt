@@ -26,9 +26,7 @@ requests==2.9.1
 requests-oauthlib==0.6.0
 six==1.10.0
 supervisor==3.2.0
-#twarc==0.7.0
-#git+https://github.com/edsu/twarc.git@v0.8.1#egg=twarc
-git+https://github.com/justinlittman/twarc.git@v0.8.1-2#egg=twarc
+twarc==1.0.4
 unicodecsv==0.14.1
 urllib3==1.14
 warc==0.2.1

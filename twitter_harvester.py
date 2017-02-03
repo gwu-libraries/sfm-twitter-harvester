@@ -80,10 +80,11 @@ class TwitterHarvester(BaseHarvester):
         follow = self.message["seeds"][0]["token"].get("follow")
         locations = self.message["seeds"][0]["token"].get("locations")
 
-        self._harvest_tweets(self.twarc.filter(track=track, follow=follow, locations=locations))
+        self._harvest_tweets(
+            self.twarc.filter(track=track, follow=follow, locations=locations, event=self.stop_harvest_seeds_event))
 
     def sample(self):
-        self._harvest_tweets(self.twarc.sample())
+        self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))
 
     def user_timeline(self):
         incremental = self.message.get("options", {}).get("incremental", False)
