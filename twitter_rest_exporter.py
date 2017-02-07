@@ -22,7 +22,7 @@ class BaseTwitterStatusTable(BaseTable):
                            segment_row_size)
 
     def _header_row(self):
-        return ('created_at', 'twitter_id', 'screen_name', 'followers_count',
+        return ('created_at', 'twitter_id', 'screen_name', 'location', 'followers_count',
                 'friends_count', 'favorite_count/like_count', 'retweet_count',
                 'hashtags', 'mentions', 'in_reply_to_screen_name',
                 'twitter_url', 'text', 'is_retweet', 'is_quote', 'coordinates',
@@ -32,6 +32,7 @@ class BaseTwitterStatusTable(BaseTable):
         row = [date_parse(item['created_at']),
                item['id_str'],
                item['user']['screen_name'],
+               item['user']['location'],
                item['user']['followers_count'],
                item['user']['friends_count'],
                item['favorite_count'],
