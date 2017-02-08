@@ -243,7 +243,9 @@ class TestTwitterHarvester(tests.TestCase):
 
     def test_lookup_missing_screen_name(self):
         mock_twarc = MagicMock(spec=Twarc)
-        mock_twarc.user_lookup.side_effect = [[]]
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_twarc.user_lookup.side_effect = [HTTPError(response=mock_response)]
 
         self.harvester.twarc = mock_twarc
         self.assertIsNone(self.harvester._lookup_screen_name("481186914"))
@@ -261,7 +263,9 @@ class TestTwitterHarvester(tests.TestCase):
 
     def test_lookup_missing_user_id(self):
         mock_twarc = MagicMock(spec=Twarc)
-        mock_twarc.user_lookup.side_effect = [[]]
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_twarc.user_lookup.side_effect = [HTTPError(response=mock_response)]
 
         self.harvester.twarc = mock_twarc
         self.assertIsNone(self.harvester._lookup_user_id("justin_littman"))
@@ -505,7 +509,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 {
                     "id": "seed_id4",
                     "token": {
-                        "track": "obama"
+                        "track": "trump"
                     }
                 }
             ],
@@ -632,6 +636,88 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+
+    def test_user_timeline(self):
+        self.harvest_path = "/sfm-data/collection_set/test_collection/test_4"
+        harvest_msg = {
+            "id": "test:4",
+            "type": "twitter_user_timeline",
+            "path": self.harvest_path,
+            "seeds": [
+                # By screen name
+                {
+                    "id": "seed_id1",
+                    "token": "socialfeedmgr"
+                },
+                {
+                    "id": "seed_id2",
+                    "uid": "2875189485"
+                },
+                {
+                    "id": "seed_id3",
+                    "token": "110_meryam"
+                },
+                {
+                    "id": "seed_id4",
+                    "token": "idkydktdk",
+                    "uid": "326940537"
+                },
+                {
+                    "id": "seed_id5",
+                    "uid": "757448176630571009"
+                }
+            ],
+            "credentials": {
+                "consumer_key": tests.TWITTER_CONSUMER_KEY,
+                "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
+                "access_token": tests.TWITTER_ACCESS_TOKEN,
+                "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
+            },
+            "collection_set": {
+                "id": "test_collection_set"
+            },
+            "collection": {
+                "id": "test_collection"
+            },
+            "options": {
+                "web_resources": True,
+                "media": True,
+                "tweets": True
+            }
+        }
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter.twitter_user_timeline")
+
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:4", status_msg["id"])
+            # Running
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Another running message
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Now wait for result message.
+            result_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:4", result_msg["id"])
+            # Success
+            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
+            # Some tweets
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
+            # 3 warnings
+            self.assertEqual(3, len(result_msg["warnings"]))
+
+            # Web harvest message.
+            web_harvest_msg = self._wait_for_message(self.web_harvest_queue, connection)
+            self.assertTrue(len(web_harvest_msg["seeds"]))
+
+            # Warc created message.
+            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+
 
     def _wait_for_message(self, queue, connection):
         counter = 0

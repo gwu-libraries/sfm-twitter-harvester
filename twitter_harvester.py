@@ -103,7 +103,7 @@ class TwitterHarvester(BaseHarvester):
                     # Report back if nsid found
                     self.result.uids[seed_id] = user_id
                 else:
-                    msg = "User id not found for user {}".format(screen_name)
+                    msg = "User id not found for user {} because account is not found or suspended".format(screen_name)
                     log.exception(msg)
                     self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
             # Otherwise, get the current screen_name
@@ -111,7 +111,8 @@ class TwitterHarvester(BaseHarvester):
                 new_screen_name = self._lookup_screen_name(user_id)
                 # if can't find the screen_name, ignore get timeline
                 if not new_screen_name:
-                    msg = "Screen name not found for user {}".format(user_id)
+                    msg = "Screen name not found for user id {} because account is not found or suspended".format(
+                        user_id)
                     log.exception(msg)
                     self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
                     # reset the user_id, ignore the get timeline
@@ -131,8 +132,10 @@ class TwitterHarvester(BaseHarvester):
 
                 except HTTPError as e:
                     if e.response.status_code == 401:
-                        msg = "Unauthorized for user {} (User ID: {}) because account is suspended or private".format(
-                            screen_name, user_id)
+                        account = "user {} (User ID: {})".format(screen_name,
+                                                                 user_id) if screen_name else "user ID: {}".format(
+                            user_id)
+                        msg = "Unauthorized for {} because account is suspended or protected".format(account)
                         log.exception(msg)
                         self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
                     else:
@@ -142,20 +145,28 @@ class TwitterHarvester(BaseHarvester):
         """
         Lookup a screen name given a user id.
         """
-        users = list(self.twarc.user_lookup(user_ids=(user_id,)))
-        assert len(users) in (0, 1)
-        if users:
-            return users[0]["screen_name"]
+        try:
+            users = list(self.twarc.user_lookup(user_ids=(user_id,)))
+            assert len(users) in (0, 1)
+            if users:
+                return users[0]["screen_name"]
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                raise e
         return None
 
     def _lookup_user_id(self, screen_name):
         """
         Lookup a user id given a screen name.
         """
-        users = list(self.twarc.user_lookup(screen_names=(screen_name,)))
-        assert len(users) in (0, 1)
-        if users:
-            return users[0]["id_str"]
+        try:
+            users = list(self.twarc.user_lookup(screen_names=(screen_name,)))
+            assert len(users) in (0, 1)
+            if users:
+                return users[0]["id_str"]
+        except HTTPError as e:
+            if e.response.status_code != 404:
+                raise e
         return None
 
     def _harvest_tweets(self, tweets):
