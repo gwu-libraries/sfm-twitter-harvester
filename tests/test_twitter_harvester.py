@@ -207,6 +207,7 @@ class TestTwitterHarvester(tests.TestCase):
                          mock_twarc.user_lookup.mock_calls)
         self.assertEqual(2, len(self.harvester.result.warnings))
         self.assertEqual(CODE_TOKEN_NOT_FOUND, self.harvester.result.warnings[0].code)
+        self.assertEqual("seed_id1", self.harvester.result.warnings[0].extras["seed_id"])
 
     @patch("twitter_harvester.Twarc", autospec=True)
     def test_user_timeline_with_private_timeline(self, mock_twarc_class):
@@ -230,6 +231,7 @@ class TestTwitterHarvester(tests.TestCase):
                          mock_twarc.timeline.mock_calls)
         self.assertEqual(1, len(self.harvester.result.warnings))
         self.assertEqual(CODE_TOKEN_UNAUTHORIZED, self.harvester.result.warnings[0].code)
+        self.assertEqual("seed_id2", self.harvester.result.warnings[0].extras["seed_id"])
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
     def test_lookup_screen_name(self):
