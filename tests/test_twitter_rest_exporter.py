@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 import tests
 from tests.tweets import tweet2
@@ -17,8 +20,9 @@ class TestTwitterStatusTable(tests.TestCase):
         self.assertEqual(9, row[5])
         self.assertEqual(10, row[6])
         self.assertEqual("http://twitter.com/justin_littman/status/660065173563158529", row[10])
-        self.assertEqual("My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe",
-                         row[11])
+        self.assertEqual(
+            u"My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe https:…",
+            row[11])
         self.assertEqual("No", row[12])
         self.assertEqual("No", row[13])
         self.assertEqual("", row[14])

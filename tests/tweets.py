@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 tweet1 = {
     "created_at": "Tue Jun 02 13:22:55 +0000 2015",
     "id": 605726286741434400,
@@ -112,7 +115,7 @@ tweet2 = {
     "created_at": "Fri Oct 30 12:06:15 +0000 2015",
     "id": 660065173563158500,
     "id_str": "660065173563158529",
-    "text": "My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe",
+    "text": u"My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe https:…",
     "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
     "truncated": False,
     "in_reply_to_status_id": None,
