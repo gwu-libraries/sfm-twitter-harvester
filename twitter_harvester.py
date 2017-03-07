@@ -105,7 +105,7 @@ class TwitterHarvester(BaseHarvester):
                 else:
                     msg = "User id not found for user {} because account is not found or suspended".format(screen_name)
                     log.exception(msg)
-                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
+                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg, seed_id=seed_id))
             # Otherwise, get the current screen_name
             else:
                 new_screen_name = self._lookup_screen_name(user_id)
@@ -114,7 +114,7 @@ class TwitterHarvester(BaseHarvester):
                     msg = "Screen name not found for user id {} because account is not found or suspended".format(
                         user_id)
                     log.exception(msg)
-                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg))
+                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg, seed_id=seed_id))
                     # reset the user_id, ignore the get timeline
                     user_id = None
                 if new_screen_name and new_screen_name != screen_name:
@@ -137,7 +137,7 @@ class TwitterHarvester(BaseHarvester):
                             user_id)
                         msg = "Unauthorized for {} because account is suspended or protected".format(account)
                         log.exception(msg)
-                        self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg))
+                        self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg, seed_id=seed_id))
                     else:
                         raise e
 
