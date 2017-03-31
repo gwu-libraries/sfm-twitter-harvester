@@ -226,7 +226,7 @@ class TwitterHarvester(BaseHarvester):
             tweet = status.item
             if not count % 100:
                 log.debug("Processing %s tweets", count)
-            if "text" in tweet:
+            if "text" in tweet or "full_text" in tweet:
                 user_id = tweet["user"]["id_str"]
                 if incremental:
                     # Update state
@@ -237,6 +237,7 @@ class TwitterHarvester(BaseHarvester):
 
     def _process_tweets(self, warc_iter):
         max_tweet_id = None
+
         for count, status in enumerate(warc_iter):
             tweet = status.item
             if not count % 100:
