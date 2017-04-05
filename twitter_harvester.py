@@ -61,7 +61,8 @@ class TwitterHarvester(BaseHarvester):
                            self.message["credentials"]["access_token"],
                            self.message["credentials"]["access_token_secret"],
                            http_errors=self.http_errors,
-                           connection_errors=self.connection_errors)
+                           connection_errors=self.connection_errors,
+                           tweet_mode="extended")
 
     def search(self):
         assert len(self.message.get("seeds", [])) == 1
@@ -225,7 +226,7 @@ class TwitterHarvester(BaseHarvester):
             tweet = status.item
             if not count % 100:
                 log.debug("Processing %s tweets", count)
-            if "text" in tweet:
+            if "text" in tweet or "full_text" in tweet:
                 user_id = tweet["user"]["id_str"]
                 if incremental:
                     # Update state
@@ -236,11 +237,12 @@ class TwitterHarvester(BaseHarvester):
 
     def _process_tweets(self, warc_iter):
         max_tweet_id = None
+
         for count, status in enumerate(warc_iter):
             tweet = status.item
             if not count % 100:
                 log.debug("Processing %s tweets", count)
-            if "text" in tweet:
+            if "text" in tweet or "full_text" in tweet:
                 max_tweet_id = max(max_tweet_id, tweet.get("id"))
                 self._process_tweet(tweet)
         return max_tweet_id
@@ -254,6 +256,8 @@ class TwitterHarvester(BaseHarvester):
         elif "quoted_status" in tweet:
             statuses.append(tweet["quoted_status"])
         for status in statuses:
+            if "extended_tweet" in status:
+                status = status["extended_tweet"]
             self._process_entities(status.get("entities", {}))
             self._process_entities(status.get("extended_entities", {}))
         if self.extract_user_profile_images:

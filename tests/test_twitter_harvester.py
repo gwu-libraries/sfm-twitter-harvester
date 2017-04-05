@@ -106,7 +106,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                                 http_errors=5, connection_errors=5)
+                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
         self.assertEqual([call("gelman", since_id=None)], mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
@@ -126,7 +126,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                            http_errors=5, connection_errors=5)
+                                            http_errors=5, connection_errors=5, tweet_mode="extended")
         self.assertEqual([call("gelman", since_id=605726286741434400)],
                          mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
@@ -146,7 +146,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                                 http_errors=5, connection_errors=5)
+                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
         self.assertEqual([call(user_id="28101965", since_id=None), call(user_id="9710852", since_id=None)],
                          mock_twarc.timeline.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
@@ -170,7 +170,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                            http_errors=5, connection_errors=5)
+                                            http_errors=5, connection_errors=5, tweet_mode="extended")
         self.assertEqual(
             [call(user_id="28101965", since_id=605726286741434400), call(user_id="9710852", since_id=None)],
             mock_twarc.timeline.mock_calls)
@@ -201,7 +201,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                                 http_errors=5, connection_errors=5)
+                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
 
         self.assertEqual([call(screen_names=("missing1",)), call(screen_names=("missing2",))],
                          mock_twarc.user_lookup.mock_calls)
@@ -226,7 +226,7 @@ class TestTwitterHarvester(tests.TestCase):
 
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                                 http_errors=5, connection_errors=5)
+                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
         self.assertEqual([call(user_id="28101965", since_id=None), call(user_id="9710852", since_id=None)],
                          mock_twarc.timeline.mock_calls)
         self.assertEqual(1, len(self.harvester.result.warnings))
@@ -304,7 +304,7 @@ class TestTwitterHarvester(tests.TestCase):
             'http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg',  # from quoted status
         }, self.harvester.result.urls_as_set())
 
-    def test_harvest_options_user__images(self):
+    def test_harvest_options_user_images(self):
         self.harvester.extract_media = False
         self.harvester.extract_web_resources = False
         self.harvester.extract_user_profile_images = True
@@ -313,6 +313,16 @@ class TestTwitterHarvester(tests.TestCase):
             'http://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg',
             'http://abs.twimg.com/images/themes/theme1/bg.png'
         }, self.harvester.result.urls_as_set())
+
+    def test_extended_tweet(self):
+        self.harvester.extract_media = True
+        self.harvester.extract_web_resources = True
+        self.harvester.extract_user_profile_images = False
+        self.harvester._process_tweets(self._iter_items([tweet6]))
+        self.assertSetEqual({
+            'https://gwu-libraries.github.io/sfm-ui/posts/2017-03-31-extended-tweets'
+        }, self.harvester.result.urls_as_set())
+
 
     def test_default_harvest_options(self):
         self.harvester.extract_media = False

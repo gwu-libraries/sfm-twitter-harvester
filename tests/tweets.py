@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 tweet1 = {
     "created_at": "Tue Jun 02 13:22:55 +0000 2015",
     "id": 605726286741434400,
@@ -780,4 +783,240 @@ tweet5 = {
     "created_at": "Wed May 04 18:48:55 +0000 2016",
     "in_reply_to_status_id_str": None,
     "place": None
+}
+
+# tweet6 has an extended tweet (Stream API)
+tweet6 = {
+  "contributors": None,
+  "truncated": True,
+  "text": "@justin_littman Some of the changes went live. This is going to be an example for a blog post I'm writing that will… https://t.co/Hq4h61I3FX",
+  "is_quote_status": False,
+  "in_reply_to_status_id": 839526473534959600,
+  "id": 847804888365117400,
+  "favorite_count": 0,
+  "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+  "retweeted": False,
+  "coordinates": None,
+  "timestamp_ms": "1490967411496",
+  "entities": {
+    "user_mentions": [
+      {
+        "id": 481186914,
+        "indices": [
+          0,
+          15
+        ],
+        "id_str": "481186914",
+        "screen_name": "justin_littman",
+        "name": "Justin Littman"
+      }
+    ],
+    "symbols": [],
+    "hashtags": [],
+    "urls": [
+      {
+        "url": "https://t.co/Hq4h61I3FX",
+        "indices": [
+          117,
+          140
+        ],
+        "expanded_url": "https://twitter.com/i/web/status/847804888365117440",
+        "display_url": "twitter.com/i/web/status/8…"
+      }
+    ]
+  },
+  "in_reply_to_screen_name": "justin_littman",
+  "id_str": "847804888365117440",
+  "display_text_range": [
+    16,
+    140
+  ],
+  "retweet_count": 0,
+  "in_reply_to_user_id": 481186914,
+  "favorited": False,
+  "user": {
+    "follow_request_sent": None,
+    "profile_use_background_image": True,
+    "default_profile_image": True,
+    "id": 2875189485,
+    "verified": False,
+    "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+    "profile_sidebar_fill_color": "DDEEF6",
+    "profile_text_color": "333333",
+    "followers_count": 0,
+    "profile_sidebar_border_color": "C0DEED",
+    "id_str": "2875189485",
+    "profile_background_color": "C0DEED",
+    "listed_count": 3,
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+    "utc_offset": None,
+    "statuses_count": 21,
+    "description": None,
+    "friends_count": 0,
+    "location": None,
+    "profile_link_color": "1DA1F2",
+    "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+    "following": None,
+    "geo_enabled": True,
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+    "name": "Justin Littman dev",
+    "lang": "en",
+    "profile_background_tile": False,
+    "favourites_count": 0,
+    "screen_name": "jlittman_dev",
+    "notifications": None,
+    "url": None,
+    "created_at": "Thu Nov 13 15:49:55 +0000 2014",
+    "contributors_enabled": False,
+    "time_zone": None,
+    "protected": False,
+    "default_profile": True,
+    "is_translator": False
+  },
+  "geo": None,
+  "in_reply_to_user_id_str": "481186914",
+  "possibly_sensitive": False,
+  "lang": "en",
+  "extended_tweet": {
+    "display_text_range": [
+      16,
+      156
+    ],
+    "entities": {
+      "user_mentions": [
+        {
+          "id": 481186914,
+          "indices": [
+            0,
+            15
+          ],
+          "id_str": "481186914",
+          "screen_name": "justin_littman",
+          "name": "Justin Littman"
+        }
+      ],
+      "symbols": [],
+      "hashtags": [],
+      "urls": [
+        {
+          "url": "https://t.co/MfQy5wTWBc",
+          "indices": [
+            133,
+            156
+          ],
+          "expanded_url": "https://gwu-libraries.github.io/sfm-ui/posts/2017-03-31-extended-tweets",
+          "display_url": "gwu-libraries.github.io/sfm-ui/posts/2…"
+        }
+      ]
+    },
+    "full_text": "@justin_littman Some of the changes went live. This is going to be an example for a blog post I'm writing that will be available at: https://t.co/MfQy5wTWBc"
+  },
+  "created_at": "Fri Mar 31 13:36:51 +0000 2017",
+  "filter_level": "low",
+  "in_reply_to_status_id_str": "839526473534959617",
+  "place": None
+}
+
+# tweet 7 is an extended tweet from the REST API
+tweet7 = {
+  "contributors": None,
+  "truncated": False,
+  "is_quote_status": False,
+  "in_reply_to_status_id": 839526473534959600,
+  "id": 847804888365117400,
+  "favorite_count": 0,
+  "full_text": "@justin_littman Some of the changes went live. This is going to be an example for a blog post I'm writing that will be available at: https://t.co/MfQy5wTWBc",
+  "source": "<a href=\"http://twitter.com\" rel=\"nofollow\">Twitter Web Client</a>",
+  "retweeted": False,
+  "coordinates": None,
+  "entities": {
+    "symbols": [],
+    "user_mentions": [
+      {
+        "id": 481186914,
+        "indices": [
+          0,
+          15
+        ],
+        "id_str": "481186914",
+        "screen_name": "justin_littman",
+        "name": "Justin Littman"
+      }
+    ],
+    "hashtags": [],
+    "urls": [
+      {
+        "url": "https://t.co/MfQy5wTWBc",
+        "indices": [
+          133,
+          156
+        ],
+        "expanded_url": "https://gwu-libraries.github.io/sfm-ui/posts/2017-03-31-extended-tweets",
+        "display_url": "gwu-libraries.github.io/sfm-ui/posts/2…"
+      }
+    ]
+  },
+  "in_reply_to_screen_name": "justin_littman",
+  "in_reply_to_user_id": 481186914,
+  "display_text_range": [
+    16,
+    156
+  ],
+  "retweet_count": 0,
+  "id_str": "847804888365117440",
+  "favorited": False,
+  "user": {
+    "follow_request_sent": False,
+    "has_extended_profile": False,
+    "profile_use_background_image": True,
+    "default_profile_image": True,
+    "id": 2875189485,
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme1/bg.png",
+    "verified": False,
+    "translator_type": "none",
+    "profile_text_color": "333333",
+    "profile_image_url_https": "https://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+    "profile_sidebar_fill_color": "DDEEF6",
+    "entities": {
+      "description": {
+        "urls": []
+      }
+    },
+    "followers_count": 0,
+    "profile_sidebar_border_color": "C0DEED",
+    "id_str": "2875189485",
+    "profile_background_color": "C0DEED",
+    "listed_count": 3,
+    "is_translation_enabled": False,
+    "utc_offset": None,
+    "statuses_count": 21,
+    "description": "",
+    "friends_count": 0,
+    "location": "",
+    "profile_link_color": "1DA1F2",
+    "profile_image_url": "http://abs.twimg.com/sticky/default_profile_images/default_profile_0_normal.png",
+    "following": False,
+    "geo_enabled": True,
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme1/bg.png",
+    "screen_name": "jlittman_dev",
+    "lang": "en",
+    "profile_background_tile": False,
+    "favourites_count": 0,
+    "name": "Justin Littman dev",
+    "notifications": False,
+    "url": None,
+    "created_at": "Thu Nov 13 15:49:55 +0000 2014",
+    "contributors_enabled": False,
+    "time_zone": None,
+    "protected": False,
+    "default_profile": True,
+    "is_translator": False
+  },
+  "geo": None,
+  "in_reply_to_user_id_str": "481186914",
+  "possibly_sensitive": False,
+  "lang": "en",
+  "created_at": "Fri Mar 31 13:36:51 +0000 2017",
+  "in_reply_to_status_id_str": "839526473534959617",
+  "place": None
 }
