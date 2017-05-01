@@ -104,8 +104,8 @@ class TwitterHarvester(BaseHarvester):
                     # Report back if nsid found
                     self.result.uids[seed_id] = user_id
                 else:
-                    msg = "User id not found for user {} because account is not found or suspended".format(
-                        u"screen_name")
+                    msg = u"User id not found for user {} because account is not found or suspended".format(
+                        screen_name)
                     log.exception(msg)
                     self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg, seed_id=seed_id))
             # Otherwise, get the current screen_name
@@ -134,7 +134,7 @@ class TwitterHarvester(BaseHarvester):
 
                 except HTTPError as e:
                     if e.response.status_code == 401:
-                        account = "user {} (User ID: {})".format(u"screen_name",
+                        account = u"user {} (User ID: {})".format(screen_name,
                                                                  user_id) if screen_name else "user ID: {}".format(
                             user_id)
                         msg = "Unauthorized for {} because account is suspended or protected".format(account)
