@@ -25,7 +25,7 @@ requests==2.9.1
 requests-oauthlib==0.6.0
 six==1.10.0
 supervisor==3.2.0
-twarc==1.0.10
+twarc==1.1.1
 unicodecsv==0.14.1
 urllib3==1.14
 vine==1.1.3
