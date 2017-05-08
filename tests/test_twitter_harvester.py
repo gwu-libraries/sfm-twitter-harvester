@@ -15,7 +15,7 @@ from kombu import Connection, Exchange, Queue, Producer
 from tests.tweets import *
 from sfmutils.state_store import DictHarvestStateStore
 from sfmutils.harvester import HarvestResult, EXCHANGE, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED, STATUS_RUNNING, \
-    STATUS_SUCCESS
+    STATUS_SUCCESS, STATUS_STOPPING
 from sfmutils.warc_iter import IterItem
 from twitter_rest_warc_iter import TwitterRestWarcIter
 from requests.exceptions import HTTPError
@@ -565,12 +565,13 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Another running message
             status_msg = self._wait_for_message(self.result_queue, connection)
-            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+            self.assertEqual(STATUS_STOPPING, status_msg["status"])
 
             # Now wait for result message.
             result_msg = self._wait_for_message(self.result_queue, connection)
             # Matching ids
             self.assertEqual("test:2", result_msg["id"])
+
             # Success
             self.assertEqual(STATUS_SUCCESS, result_msg["status"])
             # Some tweets
@@ -630,7 +631,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Another running message
             status_msg = self._wait_for_message(self.result_queue, connection)
-            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+            self.assertEqual(STATUS_STOPPING, status_msg["status"])
 
             # Now wait for result message.
             result_msg = self._wait_for_message(self.result_queue, connection)
