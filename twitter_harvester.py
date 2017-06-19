@@ -68,11 +68,29 @@ class TwitterHarvester(BaseHarvester):
         assert len(self.message.get("seeds", [])) == 1
 
         incremental = self.message.get("options", {}).get("incremental", False)
-        query = self.message["seeds"][0]["token"]
 
-        since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
+        since_id = self.state_store.get_state(__name__,
+                                              u"{}.since_id".format(self._search_id())) if incremental else None
 
-        self._harvest_tweets(self.twarc.search(query, since_id=since_id))
+        query, geocode = self._search_parameters()
+        self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
+
+    def _search_parameters(self):
+        if type(self.message["seeds"][0]["token"]) is dict:
+            query = self.message["seeds"][0]["token"].get("query")
+            geocode = self.message["seeds"][0]["token"].get("geocode")
+        else:
+            query = self.message["seeds"][0]["token"]
+            geocode = None
+        return query, geocode
+
+    def _search_id(self):
+        query, geocode = self._search_parameters()
+        if query and not geocode:
+            return query
+        if geocode and not query:
+            return geocode
+        return ":".join([query, geocode])
 
     def filter(self):
         assert len(self.message.get("seeds", [])) == 1
@@ -135,7 +153,7 @@ class TwitterHarvester(BaseHarvester):
                 except HTTPError as e:
                     if e.response.status_code == 401:
                         account = u"user {} (User ID: {})".format(screen_name,
-                                                                 user_id) if screen_name else "user ID: {}".format(
+                                                                  user_id) if screen_name else "user ID: {}".format(
                             user_id)
                         msg = "Unauthorized for {} because account is suspended or protected".format(account)
                         log.exception(msg)
@@ -209,15 +227,15 @@ class TwitterHarvester(BaseHarvester):
 
     def process_search_warc(self, warc_filepath):
         incremental = self.message.get("options", {}).get("incremental", False)
-        query = self.message["seeds"][0]["token"]
 
-        since_id = self.state_store.get_state(__name__, u"{}.since_id".format(query)) if incremental else None
+        since_id = self.state_store.get_state(__name__,
+                                              u"{}.since_id".format(self._search_id())) if incremental else None
 
         max_tweet_id = self._process_tweets(TwitterRestWarcIter(warc_filepath))
 
         # Update state store
         if incremental and max_tweet_id > since_id:
-            self.state_store.set_state(__name__, u"{}.since_id".format(query), max_tweet_id)
+            self.state_store.set_state(__name__, u"{}.since_id".format(self._search_id()), max_tweet_id)
 
     def process_user_timeline_warc(self, warc_filepath):
         incremental = self.message.get("options", {}).get("incremental", False)
