@@ -107,7 +107,7 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call("gelman", since_id=None)], mock_twarc.search.mock_calls)
+        self.assertEqual([call("gelman", geocode=None, since_id=None)], mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
     @patch("twitter_harvester.Twarc", autospec=True)
@@ -127,9 +127,31 @@ class TestTwitterHarvester(tests.TestCase):
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                             http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call("gelman", since_id=605726286741434400)],
+        self.assertEqual([call("gelman", geocode=None, since_id=605726286741434400)],
                          mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
+
+    @patch("twitter_harvester.Twarc", autospec=True)
+    def test_search(self, mock_twarc_class):
+        # The new search style has separate query and geocode parameters for search. However, the legacy
+        # style is still accepted.
+        mock_twarc = MagicMock(spec=Twarc)
+        mock_twarc.search.side_effect = [(tweet1, tweet2)]
+        # Return mock_twarc when instantiating a twarc.
+        mock_twarc_class.side_effect = [mock_twarc]
+
+        search_message = copy.deepcopy(base_search_message)
+        search_message["seeds"][0]["token"] = {"query": "gelman", "geocode": "38.899434,-77.036449,50mi"}
+
+        self.harvester.message = search_message
+        self.harvester.harvest_seeds()
+
+        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
+        self.assertEqual([call("gelman", since_id=None, geocode="38.899434,-77.036449,50mi")],
+                         mock_twarc.search.mock_calls)
+        self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
     @patch("twitter_harvester.Twarc", autospec=True)
     def test_user_timeline(self, mock_twarc_class):
@@ -323,7 +345,6 @@ class TestTwitterHarvester(tests.TestCase):
             'https://gwu-libraries.github.io/sfm-ui/posts/2017-03-31-extended-tweets'
         }, self.harvester.result.urls_as_set())
 
-
     def test_default_harvest_options(self):
         self.harvester.extract_media = False
         self.harvester.extract_web_resources = False
@@ -459,7 +480,10 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             "seeds": [
                 {
                     "id": "seed_id3",
-                    "token": "gwu"
+                    "token": {
+                        "query": "gwu",
+                        "geocode": None
+                    }
                 }
             ],
             "credentials": {
@@ -730,7 +754,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
-
 
     def _wait_for_message(self, queue, connection):
         counter = 0
