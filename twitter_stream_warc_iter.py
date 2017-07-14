@@ -3,6 +3,9 @@
 from __future__ import absolute_import
 from sfmutils.warc_iter import BaseWarcIter
 from dateutil.parser import parse as date_parse
+from twitter_rest_warc_iter import twitter_row
+import json
+import sys
 
 
 class TwitterStreamWarcIter(BaseWarcIter):
@@ -33,6 +36,21 @@ class TwitterStreamWarcIter(BaseWarcIter):
             return True
         return False
 
+    def print_elk_warc_iter(self, pretty=False, fp=sys.stdout, limit_item_types=None, print_item_type=False,
+                            dedupe=True):
+        # if necessary, put it into the base class implementation
+        for item_type, _, _, _, item in self.iter(limit_item_types=limit_item_types, dedupe=dedupe):
+            if print_item_type:
+                fp.write("{}:".format(item_type))
+            json.dump(twitter_row(item), fp, indent=4 if pretty else None)
+            fp.write("\n")
+
+    def print_elk_json_iter(self, pretty=False, fp=sys.stdout):
+        for filepath in self.filepaths:
+            with open(filepath, 'r') as f:
+                for line in f:
+                    json.dump(twitter_row(json.loads(line)), fp, indent=4 if pretty else None)
+                    fp.write("\n")
 
 if __name__ == "__main__":
     TwitterStreamWarcIter.main(TwitterStreamWarcIter)
