@@ -13,7 +13,7 @@ TIMELINE_URL = "https://api.twitter.com/1.1/statuses/user_timeline.json"
 def twitter_row(item):
     """
     item: twitter item
-    sm_type: \"tweet\", id: .id, user_id: .user.id_str, screen_name: .user.screen_name, " \
+    sm_type: \"tweet\", id: .id_str, user_id: .user.id_str, screen_name: .user.screen_name, " \
              "created_at: .created_at, text: (.extended_tweet.full_text // .full_text // .text), " \
              "user_mentions: [(.extended_tweet.entities // .entities).user_mentions[]?.screen_name], " \
              "hashtags: [(.extended_tweet.entities // .entities).hashtags[]?.text], " \
@@ -27,7 +27,9 @@ def twitter_row(item):
         tweet_type = 'retweet'
     if 'quoted_status' in item:
         tweet_type = 'quote'
-    row = {"sm_type": "tweet", 'id': item["id"], 'user_id': item["user"]["id_str"],
+    row = {'sm_type': 'tweet',
+           'id': item['id_str'],
+           'user_id': item['user']['id_str'],
            'screen_name': (item['user']['screen_name'],), 'created_at': item['created_at'],
            'text': (item.get('full_text') or
                     item.get('extended_tweet', {}).get('full_text') or
