@@ -1020,3 +1020,436 @@ tweet7 = {
   "in_reply_to_status_id_str": "839526473534959617",
   "place": None
 }
+
+# tweet 8 is a quote tweet nested in a retweet
+tweet8 = {
+  "created_at": "Fri Oct 13 07:11:19 +0000 2017",
+  "id": 918735887264972800,
+  "id_str": "918735887264972800",
+  "full_text": "RT @ClimateCentral: Wildfire season in the American West is now two and a half months longer than it was 40 years ago. Our wildfire report…",
+  "truncated": False,
+  "display_text_range": [
+    0,
+    139
+  ],
+  "entities": {
+    "hashtags": [],
+    "symbols": [],
+    "user_mentions": [
+      {
+        "screen_name": "ClimateCentral",
+        "name": "Climate Central",
+        "id": 15463610,
+        "id_str": "15463610",
+        "indices": [
+          3,
+          18
+        ]
+      }
+    ],
+    "urls": []
+  },
+  "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+  "in_reply_to_status_id": None,
+  "in_reply_to_status_id_str": None,
+  "in_reply_to_user_id": None,
+  "in_reply_to_user_id_str": None,
+  "in_reply_to_screen_name": None,
+  "user": {
+    "id": 1074184813,
+    "id_str": "1074184813",
+    "name": "DamonSmolderhalder😈",
+    "screen_name": "DElenaTimeless",
+    "location": "The Universe",
+    "description": "#Damon #TVD #Delena #IanSomerhalder #NikkiReed #SOMEREED #Baby 👶🏻 #BeautifulHumans ❤️#ISF 🐶🐱 #KatGraham #Riverdale #Yoga 🙏🏼",
+    "url": None,
+    "entities": {
+      "description": {
+        "urls": []
+      }
+    },
+    "protected": False,
+    "followers_count": 1899,
+    "friends_count": 906,
+    "listed_count": 61,
+    "created_at": "Wed Jan 09 16:04:14 +0000 2013",
+    "favourites_count": 51301,
+    "utc_offset": None,
+    "time_zone": None,
+    "geo_enabled": True,
+    "verified": False,
+    "statuses_count": 39703,
+    "lang": "en",
+    "contributors_enabled": False,
+    "is_translator": False,
+    "is_translation_enabled": False,
+    "profile_background_color": "642D8B",
+    "profile_background_image_url": "http://abs.twimg.com/images/themes/theme10/bg.gif",
+    "profile_background_image_url_https": "https://abs.twimg.com/images/themes/theme10/bg.gif",
+    "profile_background_tile": True,
+    "profile_image_url": "http://pbs.twimg.com/profile_images/600743044535554048/DBgKQQMF_normal.jpg",
+    "profile_image_url_https": "https://pbs.twimg.com/profile_images/600743044535554048/DBgKQQMF_normal.jpg",
+    "profile_banner_url": "https://pbs.twimg.com/profile_banners/1074184813/1461658232",
+    "profile_link_color": "FF0000",
+    "profile_sidebar_border_color": "65B0DA",
+    "profile_sidebar_fill_color": "7AC3EE",
+    "profile_text_color": "3D1957",
+    "profile_use_background_image": True,
+    "has_extended_profile": True,
+    "default_profile": False,
+    "default_profile_image": False,
+    "following": False,
+    "follow_request_sent": False,
+    "notifications": False,
+    "translator_type": "none"
+  },
+  "geo": None,
+  "coordinates": None,
+  "place": None,
+  "contributors": None,
+  "retweeted_status": {
+    "created_at": "Thu Oct 12 11:20:50 +0000 2017",
+    "id": 918436293247406100,
+    "id_str": "918436293247406080",
+    "full_text": "Wildfire season in the American West is now two and a half months longer than it was 40 years ago. Our wildfire report in @YEARSofLIVING ⬇️ https://t.co/nk49r9sS1a",
+    "truncated": False,
+    "display_text_range": [
+      0,
+      139
+    ],
+    "entities": {
+      "hashtags": [],
+      "symbols": [],
+      "user_mentions": [
+        {
+          "screen_name": "YEARSofLIVING",
+          "name": "YEARS",
+          "id": 308245641,
+          "id_str": "308245641",
+          "indices": [
+            122,
+            136
+          ]
+        }
+      ],
+      "urls": [
+        {
+          "url": "https://t.co/nk49r9sS1a",
+          "expanded_url": "https://twitter.com/yearsofliving/status/878622618886094848",
+          "display_url": "twitter.com/yearsofliving/…",
+          "indices": [
+            140,
+            163
+          ]
+        }
+      ]
+    },
+    "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+    "in_reply_to_status_id": None,
+    "in_reply_to_status_id_str": None,
+    "in_reply_to_user_id": None,
+    "in_reply_to_user_id_str": None,
+    "in_reply_to_screen_name": None,
+    "user": {
+      "id": 15463610,
+      "id_str": "15463610",
+      "name": "Climate Central",
+      "screen_name": "ClimateCentral",
+      "location": "Princeton, NJ",
+      "description": "Researching and reporting the science and impacts of climate change 🌎",
+      "url": "https://t.co/sTxlhOkKr4",
+      "entities": {
+        "url": {
+          "urls": [
+            {
+              "url": "https://t.co/sTxlhOkKr4",
+              "expanded_url": "http://www.climatecentral.org",
+              "display_url": "climatecentral.org",
+              "indices": [
+                0,
+                23
+              ]
+            }
+          ]
+        },
+        "description": {
+          "urls": []
+        }
+      },
+      "protected": False,
+      "followers_count": 77475,
+      "friends_count": 6206,
+      "listed_count": 3050,
+      "created_at": "Thu Jul 17 03:30:32 +0000 2008",
+      "favourites_count": 30341,
+      "utc_offset": -14400,
+      "time_zone": "Eastern Time (US & Canada)",
+      "geo_enabled": True,
+      "verified": True,
+      "statuses_count": 52858,
+      "lang": "en",
+      "contributors_enabled": False,
+      "is_translator": False,
+      "is_translation_enabled": False,
+      "profile_background_color": "0A1241",
+      "profile_background_image_url": "http://pbs.twimg.com/profile_background_images/677240012/4a1aac3ffc674aa0a080bcb176825eeb.jpeg",
+      "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/677240012/4a1aac3ffc674aa0a080bcb176825eeb.jpeg",
+      "profile_background_tile": True,
+      "profile_image_url": "http://pbs.twimg.com/profile_images/697146620543156225/R-VqX0vc_normal.png",
+      "profile_image_url_https": "https://pbs.twimg.com/profile_images/697146620543156225/R-VqX0vc_normal.png",
+      "profile_banner_url": "https://pbs.twimg.com/profile_banners/15463610/1503413844",
+      "profile_link_color": "0079C2",
+      "profile_sidebar_border_color": "000000",
+      "profile_sidebar_fill_color": "E46F0A",
+      "profile_text_color": "410936",
+      "profile_use_background_image": True,
+      "has_extended_profile": False,
+      "default_profile": False,
+      "default_profile_image": False,
+      "following": False,
+      "follow_request_sent": False,
+      "notifications": False,
+      "translator_type": "none"
+    },
+    "geo": None,
+    "coordinates": None,
+    "place": None,
+    "contributors": None,
+    "is_quote_status": True,
+    "quoted_status_id": 878622618886094800,
+    "quoted_status_id_str": "878622618886094848",
+    "quoted_status": {
+      "created_at": "Sat Jun 24 14:35:31 +0000 2017",
+      "id": 878622618886094800,
+      "id_str": "878622618886094848",
+      "full_text": "Wildfire season in the American West is now two and a half months longer than it was 40 years ago.\n\n#YEARSproject #ClimateFacts https://t.co/AiA0mjoNXA",
+      "truncated": False,
+      "display_text_range": [
+        0,
+        127
+      ],
+      "entities": {
+        "hashtags": [
+          {
+            "text": "YEARSproject",
+            "indices": [
+              100,
+              113
+            ]
+          },
+          {
+            "text": "ClimateFacts",
+            "indices": [
+              114,
+              127
+            ]
+          }
+        ],
+        "symbols": [],
+        "user_mentions": [],
+        "urls": [],
+        "media": [
+          {
+            "id": 878622069532971000,
+            "id_str": "878622069532971008",
+            "indices": [
+              128,
+              151
+            ],
+            "media_url": "http://pbs.twimg.com/ext_tw_video_thumb/878622069532971008/pu/img/tv6rCbBH57EVbrU3.jpg",
+            "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/878622069532971008/pu/img/tv6rCbBH57EVbrU3.jpg",
+            "url": "https://t.co/AiA0mjoNXA",
+            "display_url": "pic.twitter.com/AiA0mjoNXA",
+            "expanded_url": "https://twitter.com/YEARSofLIVING/status/878622618886094848/video/1",
+            "type": "photo",
+            "sizes": {
+              "small": {
+                "w": 340,
+                "h": 340,
+                "resize": "fit"
+              },
+              "thumb": {
+                "w": 150,
+                "h": 150,
+                "resize": "crop"
+              },
+              "medium": {
+                "w": 600,
+                "h": 600,
+                "resize": "fit"
+              },
+              "large": {
+                "w": 720,
+                "h": 720,
+                "resize": "fit"
+              }
+            }
+          }
+        ]
+      },
+      "extended_entities": {
+        "media": [
+          {
+            "id": 878622069532971000,
+            "id_str": "878622069532971008",
+            "indices": [
+              128,
+              151
+            ],
+            "media_url": "http://pbs.twimg.com/ext_tw_video_thumb/878622069532971008/pu/img/tv6rCbBH57EVbrU3.jpg",
+            "media_url_https": "https://pbs.twimg.com/ext_tw_video_thumb/878622069532971008/pu/img/tv6rCbBH57EVbrU3.jpg",
+            "url": "https://t.co/AiA0mjoNXA",
+            "display_url": "pic.twitter.com/AiA0mjoNXA",
+            "expanded_url": "https://twitter.com/YEARSofLIVING/status/878622618886094848/video/1",
+            "type": "video",
+            "sizes": {
+              "small": {
+                "w": 340,
+                "h": 340,
+                "resize": "fit"
+              },
+              "thumb": {
+                "w": 150,
+                "h": 150,
+                "resize": "crop"
+              },
+              "medium": {
+                "w": 600,
+                "h": 600,
+                "resize": "fit"
+              },
+              "large": {
+                "w": 720,
+                "h": 720,
+                "resize": "fit"
+              }
+            },
+            "video_info": {
+              "aspect_ratio": [
+                1,
+                1
+              ],
+              "duration_millis": 52667,
+              "variants": [
+                {
+                  "content_type": "application/x-mpegURL",
+                  "url": "https://video.twimg.com/ext_tw_video/878622069532971008/pu/pl/SSDau35aVr1jWK77.m3u8"
+                },
+                {
+                  "bitrate": 1280000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/878622069532971008/pu/vid/720x720/Ev7hnJeFNOuwA-jt.mp4"
+                },
+                {
+                  "bitrate": 832000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/878622069532971008/pu/vid/480x480/vxwV65LvvxvuqoE0.mp4"
+                },
+                {
+                  "bitrate": 320000,
+                  "content_type": "video/mp4",
+                  "url": "https://video.twimg.com/ext_tw_video/878622069532971008/pu/vid/240x240/R17LzSs4N5zqCTPG.mp4"
+                }
+              ]
+            },
+            "additional_media_info": {
+              "monetizable": False
+            }
+          }
+        ]
+      },
+      "source": "<a href=\"http://twitter.com/download/iphone\" rel=\"nofollow\">Twitter for iPhone</a>",
+      "in_reply_to_status_id": None,
+      "in_reply_to_status_id_str": None,
+      "in_reply_to_user_id": None,
+      "in_reply_to_user_id_str": None,
+      "in_reply_to_screen_name": None,
+      "user": {
+        "id": 308245641,
+        "id_str": "308245641",
+        "name": "YEARS",
+        "screen_name": "YEARSofLIVING",
+        "location": "",
+        "description": "YEARS of LIVING DANGEROUSLY docu-series on climate change. WATCH on demand on NatGeo, GooglePlay, iTunes, Amazon & DVD #YEARSproject",
+        "url": "https://t.co/vKSslafi9r",
+        "entities": {
+          "url": {
+            "urls": [
+              {
+                "url": "https://t.co/vKSslafi9r",
+                "expanded_url": "http://yearsoflivingdangerously.com/",
+                "display_url": "yearsoflivingdangerously.com",
+                "indices": [
+                  0,
+                  23
+                ]
+              }
+            ]
+          },
+          "description": {
+            "urls": []
+          }
+        },
+        "protected": False,
+        "followers_count": 25538,
+        "friends_count": 1087,
+        "listed_count": 659,
+        "created_at": "Tue May 31 02:29:26 +0000 2011",
+        "favourites_count": 4561,
+        "utc_offset": -14400,
+        "time_zone": "Eastern Time (US & Canada)",
+        "geo_enabled": False,
+        "verified": False,
+        "statuses_count": 17563,
+        "lang": "en",
+        "contributors_enabled": False,
+        "is_translator": False,
+        "is_translation_enabled": False,
+        "profile_background_color": "131516",
+        "profile_background_image_url": "http://pbs.twimg.com/profile_background_images/439137896788811777/tmrk6A-m.jpeg",
+        "profile_background_image_url_https": "https://pbs.twimg.com/profile_background_images/439137896788811777/tmrk6A-m.jpeg",
+        "profile_background_tile": True,
+        "profile_image_url": "http://pbs.twimg.com/profile_images/787779443792019457/AffHFnwg_normal.jpg",
+        "profile_image_url_https": "https://pbs.twimg.com/profile_images/787779443792019457/AffHFnwg_normal.jpg",
+        "profile_banner_url": "https://pbs.twimg.com/profile_banners/308245641/1481820006",
+        "profile_link_color": "859160",
+        "profile_sidebar_border_color": "FFFFFF",
+        "profile_sidebar_fill_color": "EFEFEF",
+        "profile_text_color": "333333",
+        "profile_use_background_image": False,
+        "has_extended_profile": False,
+        "default_profile": False,
+        "default_profile_image": False,
+        "following": False,
+        "follow_request_sent": False,
+        "notifications": False,
+        "translator_type": "none"
+      },
+      "geo": None,
+      "coordinates": None,
+      "place": None,
+      "contributors": None,
+      "is_quote_status": False,
+      "retweet_count": 80,
+      "favorite_count": 47,
+      "favorited": False,
+      "retweeted": False,
+      "possibly_sensitive": False,
+      "lang": "en"
+    },
+    "retweet_count": 190,
+    "favorite_count": 118,
+    "favorited": False,
+    "retweeted": False,
+    "possibly_sensitive": False,
+    "lang": "en"
+  },
+  "is_quote_status": True,
+  "quoted_status_id": 878622618886094800,
+  "quoted_status_id_str": "878622618886094848",
+  "retweet_count": 190,
+  "favorite_count": 0,
+  "favorited": False,
+  "retweeted": False,
+  "lang": "en"
+}

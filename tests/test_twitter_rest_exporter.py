@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from __future__ import absolute_import
 import tests
-from tests.tweets import tweet2, tweet6, tweet7
+from tests.tweets import tweet2, tweet6, tweet7, tweet8
 from twitter_rest_exporter import TwitterRestStatusTable
 from datetime import datetime
 
@@ -32,7 +35,6 @@ class TestTwitterStatusTable(tests.TestCase):
     def test_stream_extended_tweet_row(self):
         table = TwitterRestStatusTable(None, None, None, None, None, None)
         row = table._row(tweet6)
-        print row
         self.assertIsInstance(row[0], datetime)
         self.assertEqual("847804888365117440", row[1])
         self.assertEqual("jlittman_dev", row[2])
@@ -57,7 +59,6 @@ class TestTwitterStatusTable(tests.TestCase):
     def test_rest_extended_tweet_row(self):
         table = TwitterRestStatusTable(None, None, None, None, None, None)
         row = table._row(tweet7)
-        print row
         self.assertIsInstance(row[0], datetime)
         self.assertEqual("847804888365117440", row[1])
         self.assertEqual("jlittman_dev", row[2])
@@ -78,3 +79,13 @@ class TestTwitterStatusTable(tests.TestCase):
         self.assertEqual("", row[18])
         self.assertEqual("", row[19])
         self.assertEqual("", row[20])
+
+    def test_quote_nested_in_tweet(self):
+        table = TwitterRestStatusTable(None, None, None, None, None, None)
+        row = table._row(tweet8)
+        self.assertIsInstance(row[0], datetime)
+        self.assertEqual("918735887264972800", row[1])
+        self.assertEqual("RT @ClimateCentral: Wildfire season in the American West is now two and a half months longer than it was 40 years ago. Our wildfire report…",
+                         row[12])
+        self.assertEqual("Yes", row[13])
+        self.assertEqual("No", row[14])
