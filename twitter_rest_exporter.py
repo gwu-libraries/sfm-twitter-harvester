@@ -44,7 +44,7 @@ class BaseTwitterStatusTable(BaseTable):
                (item.get('full_text') or item.get('extended_tweet', {}).get('full_text') or item['text']).replace('\n',
                                                                                                                   ' '),
                'Yes' if 'retweeted_status' in item else 'No',
-               'Yes' if 'quoted_status_id' in item else 'No',
+               'Yes' if 'quoted_status' in item else 'No',
                str(item['coordinates']['coordinates']) if item['coordinates'] else ''
                ]
         # only show up to two urls w/expansions
