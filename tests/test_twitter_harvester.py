@@ -225,8 +225,9 @@ class TestTwitterHarvester(tests.TestCase):
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  http_errors=5, connection_errors=5, tweet_mode="extended")
 
-        self.assertEqual([call(screen_names=("missing1",)), call(screen_names=("missing2",))],
-                         mock_twarc.user_lookup.mock_calls)
+        self.assertEqual(
+            [call(id_type="screen_name", ids=("missing1",)), call(id_type="screen_name", ids=("missing2",))],
+            mock_twarc.user_lookup.mock_calls)
         self.assertEqual(2, len(self.harvester.result.warnings))
         self.assertEqual(CODE_TOKEN_NOT_FOUND, self.harvester.result.warnings[0].code)
         self.assertEqual("seed_id1", self.harvester.result.warnings[0].extras["seed_id"])
@@ -263,7 +264,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.twarc = mock_twarc
         self.assertEqual("justin_littman", self.harvester._lookup_screen_name("481186914"))
 
-        mock_twarc.user_lookup.assert_called_once_with(user_ids=("481186914",))
+        mock_twarc.user_lookup.assert_called_once_with(ids=("481186914",), id_type='user_id')
 
     def test_lookup_missing_screen_name(self):
         mock_twarc = MagicMock(spec=Twarc)
@@ -274,7 +275,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.twarc = mock_twarc
         self.assertIsNone(self.harvester._lookup_screen_name("481186914"))
 
-        mock_twarc.user_lookup.assert_called_once_with(user_ids=("481186914",))
+        mock_twarc.user_lookup.assert_called_once_with(ids=("481186914",), id_type='user_id')
 
     def test_lookup_user_id(self):
         mock_twarc = MagicMock(spec=Twarc)
@@ -283,7 +284,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.twarc = mock_twarc
         self.assertEqual("481186914", self.harvester._lookup_user_id("justin_littman"))
 
-        mock_twarc.user_lookup.assert_called_once_with(screen_names=("justin_littman",))
+        mock_twarc.user_lookup.assert_called_once_with(ids=("justin_littman",), id_type='screen_name')
 
     def test_lookup_missing_user_id(self):
         mock_twarc = MagicMock(spec=Twarc)
@@ -294,7 +295,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.twarc = mock_twarc
         self.assertIsNone(self.harvester._lookup_user_id("justin_littman"))
 
-        mock_twarc.user_lookup.assert_called_once_with(screen_names=("justin_littman",))
+        mock_twarc.user_lookup.assert_called_once_with(ids=("justin_littman",), id_type='screen_name')
 
     @staticmethod
     def _iter_items(items):

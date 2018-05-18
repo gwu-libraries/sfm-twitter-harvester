@@ -166,7 +166,7 @@ class TwitterHarvester(BaseHarvester):
         Lookup a screen name given a user id.
         """
         try:
-            users = list(self.twarc.user_lookup(user_ids=(user_id,)))
+            users = list(self.twarc.user_lookup(ids=(user_id,), id_type='user_id'))
             assert len(users) in (0, 1)
             if users:
                 return users[0]["screen_name"]
@@ -180,7 +180,7 @@ class TwitterHarvester(BaseHarvester):
         Lookup a user id given a screen name.
         """
         try:
-            users = list(self.twarc.user_lookup(screen_names=(screen_name,)))
+            users = list(self.twarc.user_lookup(ids=(screen_name,), id_type='screen_name'))
             assert len(users) in (0, 1)
             if users:
                 return users[0]["id_str"]
