@@ -1,7 +1,7 @@
 from sfmutils.exporter import BaseExporter, BaseTable
 from twitter_rest_warc_iter import TwitterRestWarcIter
 import logging
-from dateutil.parser import parse as date_parse
+import twarc.json2csv
 
 log = logging.getLogger(__name__)
 
@@ -22,48 +22,13 @@ class BaseTwitterStatusTable(BaseTable):
                            segment_row_size)
 
     def _header_row(self):
-        return ('created_at', 'twitter_id', 'screen_name', 'location', 'followers_count',
-                'friends_count', 'favorite_count/like_count', 'retweet_count',
-                'hashtags', 'mentions', 'in_reply_to_screen_name',
-                'twitter_url', 'text', 'is_retweet', 'is_quote', 'coordinates',
-                'url1', 'url1_expanded', 'url2', 'url2_expanded', 'media_url')
+        return twarc.json2csv.get_headings()
 
     def _row(self, item):
-        row = [date_parse(item['created_at']),
-               item['id_str'],
-               item['user']['screen_name'],
-               item['user']['location'],
-               item['user']['followers_count'],
-               item['user']['friends_count'],
-               item['favorite_count'],
-               item['retweet_count'],
-               ', '.join([hashtag['text'] for hashtag in item['entities']['hashtags']]),
-               ', '.join([user_mentions['screen_name'] for user_mentions in item['entities']['user_mentions']]),
-               item['in_reply_to_screen_name'] or '',
-               'http://twitter.com/{}/status/{}'.format(item['user']['screen_name'], item['id_str']),
-               (item.get('full_text') or item.get('extended_tweet', {}).get('full_text') or item['text']).replace('\n',
-                                                                                                                  ' '),
-               'Yes' if 'retweeted_status' in item else 'No',
-               'Yes' if 'quoted_status' in item else 'No',
-               str(item['coordinates']['coordinates']) if item['coordinates'] else ''
-               ]
-        # only show up to two urls w/expansions
-        urlslist = []
-        entities = item.get('extended_tweet', {}).get('entities') or item['entities']
-        for url in entities['urls'][:2]:
-            urlslist += [url['url'], url['expanded_url']]
-        # Padding the row if URLs do not take up all 4 columns
-        row += urlslist + [''] * (4 - len(urlslist))
-        if 'media' in entities:
-            # Only export the first media_url (haven't yet seen tweets with >1)
-            for media in entities['media'][:1]:
-                row += [media['media_url']]
-        else:
-            row += ['']
-        return row
+        return twarc.json2csv.get_row(item, excel=True)
 
     def id_field(self):
-        return "twitter_id"
+        return "id"
 
 
 class TwitterRestStatusTable(BaseTwitterStatusTable):
