@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 # See https://medium.com/@gchudnov/trapping-signals-in-docker-containers-7a57fdda7d86#.q7t4hhjx9
 

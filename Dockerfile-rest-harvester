@@ -5,6 +5,7 @@ ADD . /opt/sfm-twitter-harvester/
 WORKDIR /opt/sfm-twitter-harvester
 RUN pip install -r requirements/common.txt -r requirements/release.txt
 
-CMD sh /opt/sfm-setup/setup_reqs.sh \
-    && appdeps.py --wait-secs 60 --port-wait mq:5672 --file-wait /sfm-data/collection_set --file-wait /sfm-data/containers \
-    && gosu sfm python twitter_harvester.py --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX service mq $RABBITMQ_USER $RABBITMQ_PASSWORD /sfm-data/containers/$HOSTNAME --tries=$HARVEST_TRIES --priority-queues=$PRIORITY_QUEUES
+ADD docker/rest-harvester/invoke.sh /opt/sfm-setup/
+RUN chmod +x /opt/sfm-setup/invoke.sh
+
+CMD ["/opt/sfm-setup/invoke.sh"]
