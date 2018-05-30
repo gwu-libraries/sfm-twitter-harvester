@@ -14,7 +14,7 @@ import os
 from kombu import Connection, Exchange, Queue, Producer
 from tests.tweets import *
 from sfmutils.state_store import DictHarvestStateStore
-from sfmutils.harvester import HarvestResult, EXCHANGE, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED, STATUS_RUNNING, \
+from sfmutils.harvester import HarvestResult, EXCHANGE, CODE_TOKEN_NOT_FOUND, STATUS_RUNNING, \
     STATUS_SUCCESS, STATUS_STOPPING
 from sfmutils.warc_iter import IterItem
 from twitter_rest_warc_iter import TwitterRestWarcIter
@@ -158,8 +158,14 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc = MagicMock(spec=Twarc)
         # Expecting 2 user timelines. First returns 2 tweets. Second returns none.
         mock_twarc.timeline.side_effect = [(tweet1, tweet2), ()]
-        # Expecting 2 calls to user_lookup
-        mock_twarc.user_lookup.side_effect = [[{"screen_name": "gwtweets"}], [{"id_str": "9710852"}]]
+        # Expecting 2 calls to get for user lookup
+        mock_response1 = MagicMock()
+        mock_response1.status_code = 200
+        mock_response1.json.return_value = {"screen_name": "gwtweets", "protected": False}
+        mock_response2 = MagicMock()
+        mock_response2.status_code = 200
+        mock_response2.json.return_value = {"id_str": "9710852", "protected": False}
+        mock_twarc.get.side_effect = [mock_response1, mock_response2]
         # Return mock_twarc when instantiating a twarc.
         mock_twarc_class.side_effect = [mock_twarc]
 
@@ -181,8 +187,14 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc = MagicMock(spec=Twarc)
         # Expecting 2 timelines. First returns 1 tweets. Second returns none.
         mock_twarc.timeline.side_effect = [(tweet2,), ()]
-        # Expecting 2 calls to user_lookup
-        mock_twarc.user_lookup.side_effect = [[{"screen_name": "gwtweets"}], [{"id_str": "9710852"}]]
+        # Expecting 2 calls to get for user lookup
+        mock_response1 = MagicMock()
+        mock_response1.status_code = 200
+        mock_response1.json.return_value = {"screen_name": "gwtweets", "protected": False}
+        mock_response2 = MagicMock()
+        mock_response2.status_code = 200
+        mock_response2.json.return_value = {"id_str": "9710852", "protected": False}
+        mock_twarc.get.side_effect = [mock_response1, mock_response2]
         # Return mock_twarc when instantiating a twarc.
         twarc_class.side_effect = [mock_twarc]
 
@@ -206,6 +218,11 @@ class TestTwitterHarvester(tests.TestCase):
         # Return mock_twarc when instantiating a twarc.
         mock_twarc_class.side_effect = [mock_twarc]
 
+        mock_response = MagicMock()
+        mock_response.status_code = 404
+        mock_response.json.return_value = {"errors": [{"code": 50, "message": "User not found."}]}
+        mock_twarc.get.side_effect = HTTPError(response=mock_response)
+
         message = copy.deepcopy(base_timeline_message)
         message["seeds"] = [
             {
@@ -226,76 +243,93 @@ class TestTwitterHarvester(tests.TestCase):
                                                  http_errors=5, connection_errors=5, tweet_mode="extended")
 
         self.assertEqual(
-            [call(id_type="screen_name", ids=("missing1",)), call(id_type="screen_name", ids=("missing2",))],
-            mock_twarc.user_lookup.mock_calls)
+            [call('https://api.twitter.com/1.1/users/show.json', allow_404=True, params={'screen_name': 'missing1'}),
+             call('https://api.twitter.com/1.1/users/show.json', allow_404=True, params={'screen_name': 'missing2'})],
+            mock_twarc.get.mock_calls)
         self.assertEqual(2, len(self.harvester.result.warnings))
         self.assertEqual(CODE_TOKEN_NOT_FOUND, self.harvester.result.warnings[0].code)
         self.assertEqual("seed_id1", self.harvester.result.warnings[0].extras["seed_id"])
 
-    @patch("twitter_harvester.Twarc", autospec=True)
-    def test_user_timeline_with_private_timeline(self, mock_twarc_class):
-        mock_twarc = MagicMock(spec=Twarc)
-        mock_response = MagicMock()
-        mock_response.status_code = 401
-        # Expecting 2 user timelines. First returns 2 tweets. Second returns a 404.
-        mock_twarc.timeline.side_effect = [(tweet1, tweet2), HTTPError(response=mock_response)]
-        # Expecting 2 calls to user_lookup
-        mock_twarc.user_lookup.side_effect = [[{"screen_name": "gwtweets"}], [{"id_str": "9710852"}]]
-        # Return mock_twarc when instantiating a twarc.
-        mock_twarc_class.side_effect = [mock_twarc]
-
-        self.harvester.message = base_timeline_message
-        self.harvester.harvest_seeds()
-
-        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
-                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
-                                                 http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call(user_id="28101965", since_id=None), call(user_id="9710852", since_id=None)],
-                         mock_twarc.timeline.mock_calls)
-        self.assertEqual(1, len(self.harvester.result.warnings))
-        self.assertEqual(CODE_TOKEN_UNAUTHORIZED, self.harvester.result.warnings[0].code)
-        self.assertEqual("seed_id2", self.harvester.result.warnings[0].extras["seed_id"])
-        self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
-
     def test_lookup_screen_name(self):
         mock_twarc = MagicMock(spec=Twarc)
-        mock_twarc.user_lookup.side_effect = [[{"screen_name": "justin_littman"}]]
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"screen_name": "justin_littman", "protected": False}
+        mock_twarc.get.return_value = mock_response
 
         self.harvester.twarc = mock_twarc
-        self.assertEqual("justin_littman", self.harvester._lookup_screen_name("481186914"))
+        self.assertEqual(('OK', {'protected': False, 'screen_name': 'justin_littman'}),
+                         self.harvester._lookup_user(id="481186914", id_type="user_id"))
 
-        mock_twarc.user_lookup.assert_called_once_with(ids=("481186914",), id_type='user_id')
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'user_id': '481186914'})
+
+    def test_lookup_protected_screen_name(self):
+        mock_twarc = MagicMock(spec=Twarc)
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"screen_name": "justin_littman", "protected": True}
+        mock_twarc.get.return_value = mock_response
+
+        self.harvester.twarc = mock_twarc
+        self.assertEqual(('unauthorized', {'protected': True, 'screen_name': 'justin_littman'}),
+                         self.harvester._lookup_user(id="481186914", id_type="user_id"))
+
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'user_id': '481186914'})
 
     def test_lookup_missing_screen_name(self):
         mock_twarc = MagicMock(spec=Twarc)
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_twarc.user_lookup.side_effect = [HTTPError(response=mock_response)]
+        mock_response.json.return_value = {"errors": [{"code": 50, "message": "User not found."}]}
+        mock_twarc.get.side_effect = HTTPError(response=mock_response)
 
         self.harvester.twarc = mock_twarc
-        self.assertIsNone(self.harvester._lookup_screen_name("481186914"))
+        self.assertEqual(('not_found', None), self.harvester._lookup_user(id="481186914", id_type="user_id"))
 
-        mock_twarc.user_lookup.assert_called_once_with(ids=("481186914",), id_type='user_id')
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'user_id': '481186914'})
+
+    def test_lookup_suspended_screen_name(self):
+        mock_twarc = MagicMock(spec=Twarc)
+        mock_response = MagicMock()
+        mock_response.status_code = 403
+        mock_response.json.return_value = {"errors":[{"code":63,"message":"User has been suspended."}]}
+        mock_twarc.get.side_effect = HTTPError(response=mock_response)
+
+        self.harvester.twarc = mock_twarc
+        self.assertEqual(('suspended', None), self.harvester._lookup_user(id="481186914", id_type="user_id"))
+
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'user_id': '481186914'})
 
     def test_lookup_user_id(self):
         mock_twarc = MagicMock(spec=Twarc)
-        mock_twarc.user_lookup.side_effect = [[{"id_str": "481186914"}]]
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        mock_response.json.return_value = {"user_id": "481186914", "protected": False}
+        mock_twarc.get.return_value = mock_response
 
         self.harvester.twarc = mock_twarc
-        self.assertEqual("481186914", self.harvester._lookup_user_id("justin_littman"))
+        self.assertEqual(('OK', {'protected': False, 'user_id': '481186914'}),
+                         self.harvester._lookup_user(id="justin_littman", id_type="screen_name"))
 
-        mock_twarc.user_lookup.assert_called_once_with(ids=("justin_littman",), id_type='screen_name')
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'screen_name': 'justin_littman'})
 
     def test_lookup_missing_user_id(self):
         mock_twarc = MagicMock(spec=Twarc)
         mock_response = MagicMock()
         mock_response.status_code = 404
-        mock_twarc.user_lookup.side_effect = [HTTPError(response=mock_response)]
+        mock_response.json.return_value = {"errors": [{"code": 50, "message": "User not found."}]}
+        mock_twarc.get.side_effect = [HTTPError(response=mock_response)]
 
         self.harvester.twarc = mock_twarc
-        self.assertIsNone(self.harvester._lookup_user_id("justin_littman"))
+        self.assertEqual(('not_found', None), self.harvester._lookup_user(id="justin_littman", id_type="screen_name"))
 
-        mock_twarc.user_lookup.assert_called_once_with(ids=("justin_littman",), id_type='screen_name')
+        mock_twarc.get.assert_called_once_with('https://api.twitter.com/1.1/users/show.json', allow_404=True,
+                                               params={'screen_name': 'justin_littman'})
 
     @staticmethod
     def _iter_items(items):

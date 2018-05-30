@@ -3,6 +3,8 @@
 from __future__ import absolute_import
 import logging
 import re
+import json
+import requests
 
 from twarc import Twarc
 from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED
@@ -117,77 +119,81 @@ class TwitterHarvester(BaseHarvester):
 
             # If there is not a user_id, look it up.
             if screen_name and not user_id:
-                user_id = self._lookup_user_id(screen_name)
-                if user_id:
-                    # Report back if nsid found
+                result, user = self._lookup_user(screen_name, "screen_name")
+                if result == "OK":
+                    user_id = user["id_str"]
                     self.result.uids[seed_id] = user_id
                 else:
-                    msg = u"User id not found for user {} because account is not found or suspended".format(
-                        screen_name)
+                    msg = u"User id not found for {} because account is {}".format(screen_name,
+                                                                                   self._result_to_reason(result))
                     log.exception(msg)
-                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg, seed_id=seed_id))
+                    self.result.warnings.append(Msg("token_{}".format(result), msg, seed_id=seed_id))
             # Otherwise, get the current screen_name
             else:
-                new_screen_name = self._lookup_screen_name(user_id)
-                # if can't find the screen_name, ignore get timeline
-                if not new_screen_name:
-                    msg = "Screen name not found for user id {} because account is not found or suspended".format(
-                        user_id)
+                result, user = self._lookup_user(user_id, "user_id")
+                new_screen_name = None
+                if result == "OK":
+                    new_screen_name = user["screen_name"]
+                    if new_screen_name and new_screen_name != screen_name:
+                        self.result.token_updates[seed_id] = new_screen_name
+                        screen_name = new_screen_name
+                else:
+                    msg = u"User {} (User ID: {}) not found for {} because account is {}".format(screen_name, user_id,
+                                                                                                 self._result_to_reason(
+                                                                                                     result))
                     log.exception(msg)
-                    self.result.warnings.append(Msg(CODE_TOKEN_NOT_FOUND, msg, seed_id=seed_id))
-                    # reset the user_id, ignore the get timeline
+                    self.result.warnings.append(Msg("uid_{}".format(result), msg, seed_id=seed_id))
                     user_id = None
-                if new_screen_name and new_screen_name != screen_name:
-                    self.result.token_updates[seed_id] = new_screen_name
-                    screen_name = new_screen_name
 
             if user_id:
-                try:
-                    # Get since_id from state_store
-                    since_id = self.state_store.get_state(__name__,
-                                                          "timeline.{}.since_id".format(
-                                                              user_id)) if incremental else None
+                # Get since_id from state_store
+                since_id = self.state_store.get_state(__name__,
+                                                      "timeline.{}.since_id".format(
+                                                          user_id)) if incremental else None
 
-                    self._harvest_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
+                self._harvest_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
 
-                except HTTPError as e:
-                    if e.response.status_code == 401:
-                        account = u"user {} (User ID: {})".format(screen_name,
-                                                                  user_id) if screen_name else "user ID: {}".format(
-                            user_id)
-                        msg = "Unauthorized for {} because account is suspended or protected".format(account)
-                        log.exception(msg)
-                        self.result.warnings.append(Msg(CODE_TOKEN_UNAUTHORIZED, msg, seed_id=seed_id))
-                    else:
-                        raise e
+    def _lookup_user(self, id, id_type):
+        url = "https://api.twitter.com/1.1/users/show.json"
+        params = {id_type: id}
 
-    def _lookup_screen_name(self, user_id):
-        """
-        Lookup a screen name given a user id.
-        """
+        # USER_DELETED: 404 and {"errors": [{"code": 50, "message": "User not found."}]}
+        # USER_PROTECTED: 200 and user object with "protected": true
+        # USER_SUSPENDED: 403 and {"errors":[{"code":63,"message":"User has been suspended."}]}
+        result = "OK"
+        user = None
         try:
-            users = list(self.twarc.user_lookup(ids=(user_id,), id_type='user_id'))
-            assert len(users) in (0, 1)
-            if users:
-                return users[0]["screen_name"]
-        except HTTPError as e:
-            if e.response.status_code != 404:
+            resp = self.twarc.get(url, params=params, allow_404=True)
+            user = resp.json()
+            if user['protected']:
+                result = "unauthorized"
+        except requests.exceptions.HTTPError as e:
+            try:
+                resp_json = e.response.json()
+            except json.decoder.JSONDecodeError:
                 raise e
-        return None
+            if e.response.status_code == 404 and self._has_error_code(resp_json, 50):
+                result = "not_found"
+            elif e.response.status_code == 403 and self._has_error_code(resp_json, 63):
+                result = "suspended"
+            else:
+                raise e
+        return result, user
 
-    def _lookup_user_id(self, screen_name):
-        """
-        Lookup a user id given a screen name.
-        """
-        try:
-            users = list(self.twarc.user_lookup(ids=(screen_name,), id_type='screen_name'))
-            assert len(users) in (0, 1)
-            if users:
-                return users[0]["id_str"]
-        except HTTPError as e:
-            if e.response.status_code != 404:
-                raise e
-        return None
+    def _has_error_code(self, resp, code):
+        if isinstance(code, int):
+            code = (code,)
+        for error in resp['errors']:
+            if error['code'] in code:
+                return True
+        return False
+
+    def _result_to_reason(self, result):
+        if result == "UNAUTHORIZED":
+            return "protected"
+        elif result == "SUSPENDED":
+            return "suspended"
+        return "not found or deleted"
 
     def _harvest_tweets(self, tweets):
         # max_tweet_id = None
