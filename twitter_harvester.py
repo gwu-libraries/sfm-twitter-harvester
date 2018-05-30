@@ -131,16 +131,14 @@ class TwitterHarvester(BaseHarvester):
             # Otherwise, get the current screen_name
             else:
                 result, user = self._lookup_user(user_id, "user_id")
-                new_screen_name = None
                 if result == "OK":
                     new_screen_name = user["screen_name"]
                     if new_screen_name and new_screen_name != screen_name:
                         self.result.token_updates[seed_id] = new_screen_name
-                        screen_name = new_screen_name
                 else:
-                    msg = u"User {} (User ID: {}) not found for {} because account is {}".format(screen_name, user_id,
-                                                                                                 self._result_to_reason(
-                                                                                                     result))
+                    msg = u"User {} (User ID: {}) not found because account is {}".format(screen_name, user_id,
+                                                                                          self._result_to_reason(
+                                                                                              result))
                     log.exception(msg)
                     self.result.warnings.append(Msg("uid_{}".format(result), msg, seed_id=seed_id))
                     user_id = None

@@ -516,7 +516,7 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 {
                     "id": "seed_id3",
                     "token": {
-                        "query": "gwu",
+                        "query": "gelman",
                         "geocode": None
                     }
                 }
