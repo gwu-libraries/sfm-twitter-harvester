@@ -37,9 +37,6 @@ base_search_message = {
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
     },
     "options": {
-        "web_resources": True,
-        "media": True,
-        "user_images": True,
         "tweets": True
     },
     "collection_set": {
@@ -63,9 +60,6 @@ base_timeline_message = {
 
     ],
     "options": {
-        "web_resources": True,
-        "media": True,
-        "user_images": True,
         "tweets": True
     },
     "credentials": {
@@ -339,54 +333,6 @@ class TestTwitterHarvester(tests.TestCase):
             iter_items.append(IterItem(None, None, None, None, item))
         return iter_items
 
-    def test_harvest_options_web(self):
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = True
-        self.harvester.extract_user_profile_images = False
-        # This would normally be passed a warc iter.
-        self.harvester._process_tweets(self._iter_items([tweet2, tweet3, tweet4, tweet5]))
-        self.assertSetEqual({'http://bit.ly/1ipwd0B',  # url
-                             'http://nlp.stanford.edu/IR-book/html/htmledition/the-url-frontier-1.html',  # from retweet
-                             'http://bit.ly/1NoNeBF'  # from base tweet of quoted status
-                             },
-                            self.harvester.result.urls_as_set())
-
-    def test_harvest_options_media(self):
-        self.harvester.extract_media = True
-        self.harvester.extract_web_resources = False
-        self.harvester.extract_user_profile_images = False
-        self.harvester._process_tweets(self._iter_items([tweet2, tweet3, tweet4, tweet5]))
-        self.assertSetEqual({
-            'http://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg',  # media/extended entity
-            'http://pbs.twimg.com/media/Bv4ekbqIYAAcmXY.jpg',  # from quoted status
-        }, self.harvester.result.urls_as_set())
-
-    def test_harvest_options_user_images(self):
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = False
-        self.harvester.extract_user_profile_images = True
-        self.harvester._process_tweets(self._iter_items([tweet2]))
-        self.assertSetEqual({
-            'http://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg',
-            'http://abs.twimg.com/images/themes/theme1/bg.png'
-        }, self.harvester.result.urls_as_set())
-
-    def test_extended_tweet(self):
-        self.harvester.extract_media = True
-        self.harvester.extract_web_resources = True
-        self.harvester.extract_user_profile_images = False
-        self.harvester._process_tweets(self._iter_items([tweet6]))
-        self.assertSetEqual({
-            'https://gwu-libraries.github.io/sfm-ui/posts/2017-03-31-extended-tweets'
-        }, self.harvester.result.urls_as_set())
-
-    def test_default_harvest_options(self):
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = False
-
-        self.harvester._process_tweets(self._iter_items([tweet2, tweet3, tweet4, tweet5]))
-        self.assertSetEqual(set(), self.harvester.result.urls_as_set())
-
     @patch("twitter_harvester.TwitterRestWarcIter", autospec=True)
     def test_process_search(self, iter_class):
         mock_iter = MagicMock(spec=TwitterRestWarcIter)
@@ -398,7 +344,6 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.process_warc("test.warc.gz")
 
         self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
-        self.assertEqual(0, len(self.harvester.result.urls_as_set()))
         iter_class.assert_called_once_with("test.warc.gz")
         # State updated
         self.assertEqual(None, self.harvester.state_store.get_state("twitter_harvester", "gelman.since_id"))
@@ -407,9 +352,6 @@ class TestTwitterHarvester(tests.TestCase):
     def test_process_search_incremental(self, iter_class):
         message = copy.deepcopy(base_search_message)
         message["options"]["incremental"] = True
-
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = True
 
         mock_iter = MagicMock(spec=TwitterRestWarcIter)
         mock_iter.__iter__.side_effect = [self._iter_items([tweet2]).__iter__()]
@@ -421,7 +363,6 @@ class TestTwitterHarvester(tests.TestCase):
         self.harvester.process_warc("test.warc.gz")
 
         self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
-        self.assertSetEqual({"http://bit.ly/1ipwd0B"}, self.harvester.result.urls_as_set())
         iter_class.assert_called_once_with("test.warc.gz")
         # State updated
         self.assertEqual(660065173563158500,
@@ -434,14 +375,10 @@ class TestTwitterHarvester(tests.TestCase):
         # Return mock_iter when instantiating a TwitterRestWarcIter.
         iter_class.side_effect = [mock_iter]
 
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = True
-
         self.harvester.message = base_timeline_message
         self.harvester.process_warc("test.warc.gz")
 
         self.assertDictEqual({"tweets": 2}, self.harvester.result.stats_summary())
-        self.assertSetEqual({"http://bit.ly/1ipwd0B"}, self.harvester.result.urls_as_set())
         iter_class.assert_called_once_with("test.warc.gz")
         # # Nothing added to state
         self.assertEqual(0, len(self.harvester.state_store.state))
@@ -456,15 +393,11 @@ class TestTwitterHarvester(tests.TestCase):
         # Return mock_iter when instantiating a TwitterRestWarcIter.
         iter_class.side_effect = [mock_iter]
 
-        self.harvester.extract_media = False
-        self.harvester.extract_web_resources = True
-
         self.harvester.message = message
         self.harvester.state_store.set_state("twitter_harvester", "timeline.481186914.since_id", 605726286741434400)
         self.harvester.process_warc("test.warc.gz")
 
         self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
-        self.assertSetEqual({"http://bit.ly/1ipwd0B"}, self.harvester.result.urls_as_set())
         iter_class.assert_called_once_with("test.warc.gz")
         # State updated
         self.assertEqual(660065173563158500,
@@ -482,16 +415,12 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
         self.exchange = Exchange(EXCHANGE, type="topic")
         self.result_queue = Queue(name="result_queue", routing_key="harvest.status.twitter.*", exchange=self.exchange,
                                   durable=True)
-        self.web_harvest_queue = Queue(name="web_harvest_queue", routing_key="harvest.start.web",
-                                       exchange=self.exchange)
         self.warc_created_queue = Queue(name="warc_created_queue", routing_key="warc_created", exchange=self.exchange)
         twitter_harvester_queue = Queue(name="twitter_harvester", exchange=self.exchange)
         twitter_rest_harvester_queue = Queue(name="twitter_rest_harvester", exchange=self.exchange)
         with self._create_connection() as connection:
             self.result_queue(connection).declare()
             self.result_queue(connection).purge()
-            self.web_harvest_queue(connection).declare()
-            self.web_harvest_queue(connection).purge()
             self.warc_created_queue(connection).declare()
             self.warc_created_queue(connection).purge()
             # Declaring to avoid race condition with harvester starting.
@@ -534,8 +463,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "id": "test_collection"
             },
             "options": {
-                "web_resources": True,
-                "media": True,
                 "tweets": True
             }
         }
@@ -562,10 +489,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.assertEqual(STATUS_SUCCESS, result_msg["status"])
             # Some tweets
             self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
-
-            # Web harvest message.
-            web_harvest_msg = self._wait_for_message(self.web_harvest_queue, connection)
-            self.assertTrue(len(web_harvest_msg["seeds"]))
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
@@ -597,8 +520,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "id": "test_collection"
             },
             "options": {
-                "web_resources": True,
-                "media": True,
                 "tweets": True
             }
         }
@@ -636,11 +557,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Some tweets
             self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
 
-            # Web harvest message.
-            web_harvest_msg = self._wait_for_message(self.web_harvest_queue, connection)
-            # Some seeds
-            self.assertTrue(len(web_harvest_msg["seeds"]))
-
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
@@ -663,8 +579,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "id": "test_collection"
             },
             "options": {
-                "web_resources": True,
-                "media": True,
                 "tweets": True
             }
         }
@@ -700,11 +614,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.assertEqual(STATUS_SUCCESS, result_msg["status"])
             # Some tweets
             self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
-
-            # Web harvest message.
-            web_harvest_msg = self._wait_for_message(self.web_harvest_queue, connection)
-            # Some seeds
-            self.assertTrue(len(web_harvest_msg["seeds"]))
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
@@ -752,8 +661,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
                 "id": "test_collection"
             },
             "options": {
-                "web_resources": True,
-                "media": True,
                 "tweets": True
             }
         }
@@ -782,10 +689,6 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
             # 3 warnings
             self.assertEqual(3, len(result_msg["warnings"]))
-
-            # Web harvest message.
-            web_harvest_msg = self._wait_for_message(self.web_harvest_queue, connection)
-            self.assertTrue(len(web_harvest_msg["seeds"]))
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))

@@ -30,18 +30,10 @@ class TwitterHarvester(BaseHarvester):
         self.twarc = None
         self.connection_errors = connection_errors
         self.http_errors = http_errors
-        self.extract_media = False
-        self.extract_web_resources = False
-        self.extract_user_profile_images = False
 
     def harvest_seeds(self):
         # Create a twarc
         self._create_twarc()
-
-        # Get harvest extract options.
-        self.extract_media = self.message.get("options", {}).get("media", False)
-        self.extract_web_resources = self.message.get("options", {}).get("web_resources", False)
-        self.extract_user_profile_images = self.message.get("options", {}).get("user_images", False)
 
         # Dispatch message based on type.
         harvest_type = self.message.get("type")
@@ -203,17 +195,6 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
 
-    def _process_entities(self, entities):
-        if self.extract_web_resources:
-            for url in entities.get("urls", []):
-                # Exclude links for tweets
-                if url["expanded_url"] and not status_re.match(url["expanded_url"]):
-                    self.result.urls.append(url["expanded_url"])
-        if self.extract_media:
-            for media in entities.get("media", []):
-                if media["media_url"]:
-                    self.result.urls.append(media["media_url"])
-
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
         harvest_type = self.message.get("type")
@@ -271,22 +252,6 @@ class TwitterHarvester(BaseHarvester):
 
     def _process_tweet(self, tweet):
         self.result.increment_stats("tweets")
-        # For more info, see https://dev.twitter.com/overview/api/entities-in-twitter-objects
-        statuses = [tweet]
-        if "retweeted_status" in tweet:
-            statuses.append(tweet["retweeted_status"])
-        elif "quoted_status" in tweet:
-            statuses.append(tweet["quoted_status"])
-        for status in statuses:
-            if "extended_tweet" in status:
-                status = status["extended_tweet"]
-            self._process_entities(status.get("entities", {}))
-            self._process_entities(status.get("extended_entities", {}))
-        if self.extract_user_profile_images:
-            self.result.urls.append(tweet["user"]["profile_image_url"])
-            self.result.urls.append(tweet["user"]["profile_background_image_url"])
-            if "profile_banner_url" in tweet["user"]:
-                self.result.urls.append(tweet["user"]["profile_banner_url"])
 
 
 if __name__ == "__main__":
