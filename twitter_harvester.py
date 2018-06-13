@@ -178,10 +178,11 @@ class TwitterHarvester(BaseHarvester):
                 return True
         return False
 
-    def _result_to_reason(self, result):
-        if result == "UNAUTHORIZED":
+    @staticmethod
+    def _result_to_reason(result):
+        if result == "unauthorized":
             return "protected"
-        elif result == "SUSPENDED":
+        elif result == "suspended":
             return "suspended"
         return "not found or deleted"
 
