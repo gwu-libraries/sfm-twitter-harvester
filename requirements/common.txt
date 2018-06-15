@@ -1,4 +1,4 @@
-twarc==1.4.6
+twarc==1.4.7
 python-dateutil==2.7.3
 
 # Pinning to correct version for sfm-utils
