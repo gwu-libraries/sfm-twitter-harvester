@@ -289,7 +289,7 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc = MagicMock(spec=Twarc)
         mock_response = MagicMock()
         mock_response.status_code = 403
-        mock_response.json.return_value = {"errors":[{"code":63,"message":"User has been suspended."}]}
+        mock_response.json.return_value = {"errors": [{"code": 63, "message": "User has been suspended."}]}
         mock_twarc.get.side_effect = HTTPError(response=mock_response)
 
         self.harvester.twarc = mock_twarc

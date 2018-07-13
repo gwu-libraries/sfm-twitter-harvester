@@ -1,9 +1,9 @@
-FROM gwul/sfm-base@sha256:07b3495d4496d603d464b3f829f92e61c6d27da8b773e1076e1b6ffcfd643eaf
-MAINTAINER Justin Littman <justinlittman@gwu.edu>
+FROM gwul/sfm-base@sha256:e68cb98bdc9dc23bbed734f3e507a0ffb866b007dffea038b6af8d88a62150e6
+MAINTAINER Social Feed Manager <sfm@gwu.edu>
 
 # Install supervisor
 RUN apt-get update && apt-get install -y \
-    supervisor=3.0r1-1+deb8u1
+    supervisor=3.3*
 VOLUME /etc/supervisor/conf.d
 
 ADD . /opt/sfm-twitter-harvester/

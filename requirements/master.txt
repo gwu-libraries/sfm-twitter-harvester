@@ -1,2 +1,2 @@
-git+https://github.com/gwu-libraries/warcprox.git@master#egg=warcprox-gwu
+git+https://github.com/gwu-libraries/warcprox.git@master#egg=warcprox
 git+https://github.com/gwu-libraries/sfm-utils.git@master#egg=sfmutils

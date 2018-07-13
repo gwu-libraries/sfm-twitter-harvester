@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 
 from __future__ import absolute_import
 import logging
@@ -7,10 +7,9 @@ import json
 import requests
 
 from twarc import Twarc
-from sfmutils.harvester import BaseHarvester, Msg, CODE_TOKEN_NOT_FOUND, CODE_TOKEN_UNAUTHORIZED
+from sfmutils.harvester import BaseHarvester, Msg
 from twitter_stream_warc_iter import TwitterStreamWarcIter
 from twitter_rest_warc_iter import TwitterRestWarcIter
-from requests.exceptions import HTTPError
 
 log = logging.getLogger(__name__)
 
@@ -170,7 +169,8 @@ class TwitterHarvester(BaseHarvester):
                 raise e
         return result, user
 
-    def _has_error_code(self, resp, code):
+    @staticmethod
+    def _has_error_code(resp, code):
         if isinstance(code, int):
             code = (code,)
         for error in resp['errors']:
@@ -236,7 +236,7 @@ class TwitterHarvester(BaseHarvester):
                     # Update state
                     key = "timeline.{}.since_id".format(user_id)
                     self.state_store.set_state(__name__, key,
-                                               max(self.state_store.get_state(__name__, key), tweet.get("id")))
+                                               max(self.state_store.get_state(__name__, key) or 0, tweet.get("id")))
                 self._process_tweet(tweet)
 
     def _process_tweets(self, warc_iter):
@@ -247,11 +247,11 @@ class TwitterHarvester(BaseHarvester):
             if not count % 100:
                 log.debug("Processing %s tweets", count)
             if "text" in tweet or "full_text" in tweet:
-                max_tweet_id = max(max_tweet_id, tweet.get("id"))
+                max_tweet_id = max(max_tweet_id or 0, tweet.get("id"))
                 self._process_tweet(tweet)
         return max_tweet_id
 
-    def _process_tweet(self, tweet):
+    def _process_tweet(self, _):
         self.result.increment_stats("tweets")
 
 
