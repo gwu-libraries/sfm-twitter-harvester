@@ -220,7 +220,7 @@ class TwitterHarvester(BaseHarvester):
         max_tweet_id = self._process_tweets(TwitterRestWarcIter(warc_filepath))
 
         # Update state store
-        if incremental and max_tweet_id > since_id:
+        if incremental and (max_tweet_id or 0) > (since_id or 0):
             self.state_store.set_state(__name__, u"{}.since_id".format(self._search_id()), max_tweet_id)
 
     def process_user_timeline_warc(self, warc_filepath):
