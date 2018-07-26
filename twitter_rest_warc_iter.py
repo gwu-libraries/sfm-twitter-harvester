@@ -19,9 +19,12 @@ class TwitterRestWarcIter(BaseWarcIter):
         return url.startswith(SEARCH_URL) or url.startswith(TIMELINE_URL)
 
     def _item_iter(self, url, json_obj):
+        # Ignore error messages
+        if isinstance(json_obj, dict) and 'errors' in json_obj:
+            return
         # Search has { "statuses": [tweets] }
         # Timeline has [tweets]
-        tweet_list = json_obj["statuses"] if url.startswith(SEARCH_URL) else json_obj
+        tweet_list = json_obj.get("statuses", []) if url.startswith(SEARCH_URL) else json_obj
         for status in tweet_list:
             yield "twitter_status", status["id_str"], date_parse(status["created_at"]), status
 

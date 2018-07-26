@@ -23,3 +23,11 @@ class TestTwitterRestWarcIter(tests.TestCase):
 
         warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("999999",))
         self.assertEquals(0, len(list(warc_iter)))
+
+    def test_ignore_errors(self):
+        self.assertEquals(0, len(list(TwitterRestWarcIter._item_iter(None,
+                                                                     'https://api.twitter.com/1.1/statuses/'
+                                                                     'user_timeline.json',
+                                                                     {'errors': [
+                                                                         {'message': 'Rate limit exceeded',
+                                                                          'code': 88}]}))))
