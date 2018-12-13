@@ -20,7 +20,7 @@ class TwitterRestWarcIter(BaseWarcIter):
 
     def _item_iter(self, url, json_obj):
         # Ignore error messages
-        if isinstance(json_obj, dict) and 'errors' in json_obj:
+        if isinstance(json_obj, dict) and ('error' in json_obj or 'errors' in json_obj):
             return
         # Search has { "statuses": [tweets] }
         # Timeline has [tweets]
