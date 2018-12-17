@@ -65,20 +65,22 @@ class TwitterHarvester(BaseHarvester):
         since_id = self.state_store.get_state(__name__,
                                               u"{}.since_id".format(self._search_id())) if incremental else None
 
-        query, geocode = self._search_parameters()
-        self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
+        query, geocode, lang = self._search_parameters()
+        self._harvest_tweets(self.twarc.search(query, geocode=geocode, lang=lang, since_id=since_id))
 
     def _search_parameters(self):
         if type(self.message["seeds"][0]["token"]) is dict:
             query = self.message["seeds"][0]["token"].get("query")
             geocode = self.message["seeds"][0]["token"].get("geocode")
+            lang = self.message["seeds"][0]["token"].get("lang")
         else:
             query = self.message["seeds"][0]["token"]
             geocode = None
-        return query, geocode
+            lang = None
+        return query, geocode, lang
 
     def _search_id(self):
-        query, geocode = self._search_parameters()
+        query, geocode, lang = self._search_parameters()
         if query and not geocode:
             return query
         if geocode and not query:
