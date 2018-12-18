@@ -101,7 +101,7 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call("gelman", geocode=None, since_id=None)], mock_twarc.search.mock_calls)
+        self.assertEqual([call("gelman", geocode=None, lang=None, since_id=None)], mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
     @patch("twitter_harvester.Twarc", autospec=True)
@@ -121,7 +121,7 @@ class TestTwitterHarvester(tests.TestCase):
         twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                             tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                             http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call("gelman", geocode=None, since_id=605726286741434400)],
+        self.assertEqual([call("gelman", geocode=None, lang=None, since_id=605726286741434400)],
                          mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
 
@@ -143,7 +143,7 @@ class TestTwitterHarvester(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  http_errors=5, connection_errors=5, tweet_mode="extended")
-        self.assertEqual([call("gelman", since_id=None, geocode="38.899434,-77.036449,50mi")],
+        self.assertEqual([call("gelman", since_id=None, geocode="38.899434,-77.036449,50mi", lang=None)],
                          mock_twarc.search.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
