@@ -13,8 +13,8 @@ setup(
              'twitter_rest_warc_iter.py',
              'twitter_stream_warc_iter.py'],
     install_requires=['sfmutils',
-                      'python-dateutil>=2.4.2'],
-    tests_require=['mock>=1.3.0'],
+                      'python-dateutil>=2.7.5'],
+    tests_require=['mock==2.0.0'],
     classifiers=[
         'Intended Audience :: Developers',
         'Topic :: Software Development :: Libraries :: Python Modules',

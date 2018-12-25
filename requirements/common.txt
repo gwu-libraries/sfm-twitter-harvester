@@ -1,5 +1,5 @@
-twarc==1.4.7
-python-dateutil==2.7.3
+twarc==1.6.1
+python-dateutil==2.7.5
 
 # Master support Py3, but no release. This should be in sfm-utils setup.py once released.
 git+https://github.com/Supervisor/supervisor
@@ -8,4 +8,4 @@ git+https://github.com/Supervisor/supervisor
 requests==2.21.0
 
 # Testing
-mock==1.3.0
+mock==2.0.0
