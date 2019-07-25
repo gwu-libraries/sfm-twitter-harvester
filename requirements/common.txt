@@ -5,7 +5,7 @@ python-dateutil==2.7.5
 git+https://github.com/Supervisor/supervisor
 
 # Pinning to correct version for sfm-utils
-requests==2.21.0
+requests==2.22.0
 
 # Testing
 mock==2.0.0
