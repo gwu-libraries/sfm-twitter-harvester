@@ -91,9 +91,10 @@ class TwitterHarvester(BaseHarvester):
         track = self.message["seeds"][0]["token"].get("track")
         follow = self.message["seeds"][0]["token"].get("follow")
         locations = self.message["seeds"][0]["token"].get("locations")
+        language = self.message["seeds"][0]["token"].get("language")
 
         self._harvest_tweets(
-            self.twarc.filter(track=track, follow=follow, locations=locations, event=self.stop_harvest_seeds_event))
+            self.twarc.filter(track=track, follow=follow, locations=locations, lang=language, event=self.stop_harvest_seeds_event))
 
     def sample(self):
         self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))

@@ -96,7 +96,7 @@ Api methods called:
 
 Required parameters:
 
-  * token: a dictionary containing track, follow, and/or locations
+  * token: a dictionary containing track, follow, locations, and/or language
   
 Optional parameters:
 

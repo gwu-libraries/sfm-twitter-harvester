@@ -1,4 +1,4 @@
-twarc==1.6.1
+twarc==1.7.3
 python-dateutil==2.7.5
 
 # Master support Py3, but no release. This should be in sfm-utils setup.py once released.
