@@ -6,11 +6,11 @@ set -e
 sh /opt/sfm-setup/setup_reqs.sh
 
 echo "Waiting for dependencies"
-appdeps.py --wait-secs 60 --port-wait mq:5672 --file-wait /sfm-data/collection_set --file-wait /sfm-data/containers
+appdeps.py --wait-secs 60 --port-wait mq:5672 --file-wait /sfm-collection-set-data/collection_set --file-wait /sfm-collection-set-data/containers
 
 echo "Starting supervisor"
 supervisord -c /etc/supervisor/supervisord.conf
 
 echo "Starting stream consumer"
 # exec makes this take the pid of the script, which should be pid 1.
-exec stream_consumer.py mq $RABBITMQ_USER $RABBITMQ_PASSWORD twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter.twitter_sample /opt/sfm-twitter-harvester/twitter_harvester.py /sfm-data/containers/$HOSTNAME --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX --tries=$HARVEST_TRIES
+exec stream_consumer.py mq $RABBITMQ_USER $RABBITMQ_PASSWORD twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter.twitter_sample /opt/sfm-twitter-harvester/twitter_harvester.py /sfm-containers-data/containers/$HOSTNAME --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX --tries=$HARVEST_TRIES
