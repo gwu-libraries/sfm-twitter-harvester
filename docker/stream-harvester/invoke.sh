@@ -6,7 +6,7 @@ set -e
 sh /opt/sfm-setup/setup_reqs.sh
 
 echo "Waiting for dependencies"
-appdeps.py --wait-secs 60 --port-wait ${SFM_RABBITMQ_HOST}:${SFM_RABBITMQ_PORT}  --file-wait /sfm-collection-set-data/collection_set --file-wait /sfm-collection-set-data/containers
+appdeps.py --wait-secs 60 --port-wait ${SFM_RABBITMQ_HOST}:${SFM_RABBITMQ_PORT} --file-wait /sfm-collection-set-data/collection_set --file-wait /sfm-collection-set-data/containers
 
 echo "Starting supervisor"
 supervisord -c /etc/supervisor/supervisord.conf
