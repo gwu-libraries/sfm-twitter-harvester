@@ -1,3 +1,5 @@
+env:
+- DOCKER_COMPOSE_VERSION=1.28.6
 language: python
 python:
 - '3.6'
@@ -5,11 +7,15 @@ sudo: required
 services:
 - docker
 before_install:
+- sudo rm /usr/local/bin/docker-compose
+- curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
+- chmod +x docker-compose
+- sudo mv docker-compose /usr/local/bin
 - docker --version
 - docker-compose --version
 - docker-compose -f docker/ci.docker-compose.yml pull
 - docker-compose -f docker/ci.docker-compose.yml up -d
-- sleep 30
+- sleep 30 
 - docker exec docker_twitterrestharvester_1 python -m unittest discover
 install: pip install -r requirements/common.txt -r requirements/master.txt
 script: python -m unittest discover
