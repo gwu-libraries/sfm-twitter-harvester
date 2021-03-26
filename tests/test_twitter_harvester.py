@@ -126,7 +126,7 @@ class TestTwitterHarvester(tests.TestCase):
         self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
 
     @patch("twitter_harvester.Twarc", autospec=True)
-    def test_search(self, mock_twarc_class):
+    def test_new_search(self, mock_twarc_class):
         # The new search style has separate query and geocode parameters for search. However, the legacy
         # style is still accepted.
         mock_twarc = MagicMock(spec=Twarc)
