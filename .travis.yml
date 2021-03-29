@@ -15,7 +15,7 @@ before_install:
 - docker-compose --version
 - docker-compose -f docker/ci.docker-compose.yml pull
 - docker-compose -f docker/ci.docker-compose.yml up -d
-- sleep 30 
+- sleep 30
 - docker exec docker_twitterrestharvester_1 python -m unittest discover
 install: pip install -r requirements/common.txt -r requirements/master.txt
 script: python -m unittest discover
