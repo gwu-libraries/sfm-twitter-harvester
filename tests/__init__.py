@@ -4,7 +4,7 @@ import os
 import socket
 
 try:
-    from test_config import *
+    from .test_config import *
 except ImportError:
     TWITTER_CONSUMER_KEY = os.environ.get("TWITTER_CONSUMER_KEY", "fake")
     TWITTER_CONSUMER_SECRET = os.environ.get("TWITTER_CONSUMER_SECRET", "fake")
@@ -15,11 +15,11 @@ test_config_available = True if TWITTER_CONSUMER_KEY != "fake" and TWITTER_CONSU
                                 and TWITTER_ACCESS_TOKEN != "fake" and TWITTER_ACCESS_TOKEN_SECRET != "fake" else False
 
 mq_port_available = True
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-try:
-    s.connect(("mq", 5672))
-except socket.error:
-    mq_port_available = False
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    try:
+        s.connect(("mq", 5672))
+    except socket.error:
+        mq_port_available = False
 
 mq_username = os.environ.get("RABBITMQ_USER")
 mq_password = os.environ.get("RABBITMQ_PASSWORD")

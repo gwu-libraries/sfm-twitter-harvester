@@ -12,27 +12,27 @@ class TestTwitterRestWarcIter(tests.TestCase):
     def test_no_limit(self):
         warc_iter = TwitterRestWarcIter(self.filepaths)
         tweets = list(warc_iter)
-        self.assertEquals(1473, len(tweets))
-        self.assertEquals("721345764362948609", tweets[0][1])
+        self.assertEqual(1473, len(tweets))
+        self.assertEqual("721345764362948609", tweets[0][1])
         # Datetime is aware
         self.assertIsNotNone(tweets[0][2].tzinfo)
 
     def test_limit(self):
         warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("481186914", "999999"))
-        self.assertEquals(244, len(list(warc_iter)))
+        self.assertEqual(244, len(list(warc_iter)))
 
         warc_iter = TwitterRestWarcIter(self.filepaths, limit_user_ids=("999999",))
-        self.assertEquals(0, len(list(warc_iter)))
+        self.assertEqual(0, len(list(warc_iter)))
 
     def test_ignore_errors(self):
-        self.assertEquals(0, len(list(TwitterRestWarcIter._item_iter(None,
+        self.assertEqual(0, len(list(TwitterRestWarcIter._item_iter(None,
                                                                      'https://api.twitter.com/1.1/statuses/'
                                                                      'user_timeline.json',
                                                                      {'errors': [
                                                                          {'message': 'Rate limit exceeded',
                                                                           'code': 88}]}))))
 
-        self.assertEquals(0, len(list(TwitterRestWarcIter._item_iter(None,
+        self.assertEqual(0, len(list(TwitterRestWarcIter._item_iter(None,
                                                                      'https://api.twitter.com/1.1/statuses/'
                                                                      'user_timeline.json',
                                                                      {'request': '/1.1/statuses/user_timeline.json',
