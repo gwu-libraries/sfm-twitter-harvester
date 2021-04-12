@@ -31,6 +31,8 @@ services:
           - DEBUG=true
           - SFM_RABBITMQ_USER=sfm_user
           - SFM_RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_HOST=mq
+          - SFM_RABBITMQ_PORT=5672
           - SFM_REQS=master
           - HARVEST_TRIES=3
           - SFM_UID=900
@@ -52,6 +54,8 @@ services:
           - DEBUG=true
           - SFM_RABBITMQ_USER=sfm_user
           - SFM_RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_HOST=mq
+          - SFM_RABBITMQ_PORT=5672
           - SFM_REQS=master
           - HARVEST_TRIES=3
           - SFM_UID=900
