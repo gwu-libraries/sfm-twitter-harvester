@@ -17,7 +17,7 @@ services:
   twitterrestharvester:
       #image: gwul/sfm-twitter-rest-harvester:master
       build:
-          context: ../sfm-twitter-harvester
+          context: ..
           dockerfile: Dockerfile-rest-harvester
       links:
           - rabbit:mq
