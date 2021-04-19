@@ -15,7 +15,10 @@ services:
           - SFM_UID=900
           - SFM_GID=900
   twitterrestharvester:
-      image: gwul/sfm-twitter-rest-harvester:master
+      #image: gwul/sfm-twitter-rest-harvester:master
+      build:
+          context: ../sfm-twitter-harvester
+          dockerfile: Dockerfile-rest-harvester
       links:
           - rabbit:mq
       volumes:
