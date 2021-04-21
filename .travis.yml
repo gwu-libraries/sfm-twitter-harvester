@@ -11,6 +11,9 @@ before_install:
 - curl -L https://github.com/docker/compose/releases/download/${DOCKER_COMPOSE_VERSION}/docker-compose-`uname -s`-`uname -m` > docker-compose
 - chmod +x docker-compose
 - sudo mv docker-compose /usr/local/bin
+# The following step requires DOCKER_USERNAME and DOCKER_PASSWORD to be set in the Travis settings for the repository
+# (for example, at https://travis-ci.org/github/gwu-libraries/sfm-twitter-harvester/settings)
+- echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
 - docker --version
 - docker-compose --version
 - docker-compose -f docker/ci.docker-compose.yml pull

@@ -4,8 +4,8 @@ services:
       image: rabbitmq@sha256:d374d705b3f16e3f0ee34ea14d8599cb4c1f1604ae6deef5fefbaf063d0bb9c6
       environment:
           - TZ=America/New_York
-          - RABBITMQ_DEFAULT_USER=sfm_user
-          - RABBITMQ_DEFAULT_PASS=password
+          - SFM_RABBITMQ_DEFAULT_USER=sfm_user
+          - SFM_RABBITMQ_DEFAULT_PASS=password
   data:
       image: gwul/sfm-data:master
       volumes:
@@ -15,7 +15,10 @@ services:
           - SFM_UID=900
           - SFM_GID=900
   twitterrestharvester:
-      image: gwul/sfm-twitter-rest-harvester:master
+      # image: gwul/sfm-twitter-rest-harvester:master
+      build:
+          context: ..
+          dockerfile: Dockerfile-rest-harvester
       links:
           - rabbit:mq
       volumes:
@@ -29,14 +32,19 @@ services:
           - TWITTER_ACCESS_TOKEN
           - TWITTER_ACCESS_TOKEN_SECRET
           - DEBUG=true
-          - RABBITMQ_USER=sfm_user
-          - RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_USER=sfm_user
+          - SFM_RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_HOST=mq
+          - SFM_RABBITMQ_PORT=5672
           - SFM_REQS=master
           - HARVEST_TRIES=3
           - SFM_UID=900
           - SFM_GID=900
   twitterstreamharvester:
-      image: gwul/sfm-twitter-stream-harvester:master
+      # image: gwul/sfm-twitter-stream-harvester:master
+      build:
+          context: ..
+          dockerfile: Dockerfile-stream-harvester
       links:
           - rabbit:mq
       volumes:
@@ -50,8 +58,10 @@ services:
           - TWITTER_ACCESS_TOKEN
           - TWITTER_ACCESS_TOKEN_SECRET
           - DEBUG=true
-          - RABBITMQ_USER=sfm_user
-          - RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_USER=sfm_user
+          - SFM_RABBITMQ_PASSWORD=password
+          - SFM_RABBITMQ_HOST=mq
+          - SFM_RABBITMQ_PORT=5672
           - SFM_REQS=master
           - HARVEST_TRIES=3
           - SFM_UID=900
