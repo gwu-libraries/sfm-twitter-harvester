@@ -9,7 +9,11 @@ services:
   data:
       image: gwul/sfm-data:master
       volumes:
-           - /sfm-data
+           - /sfm-db-data
+           - /sfm-mq-data
+           - /sfm-export-data
+           - /sfm-containers-data
+           - /sfm-collection-set-data
       environment:
           - TZ=America/New_York
           - SFM_UID=900
