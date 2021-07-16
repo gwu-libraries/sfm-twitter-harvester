@@ -8,6 +8,13 @@ sh /opt/sfm-setup/setup_reqs.sh
 echo "Waiting for dependencies"
 appdeps.py --wait-secs 60 --port-wait ${SFM_RABBITMQ_HOST}:${SFM_RABBITMQ_PORT} --file-wait /sfm-collection-set-data/collection_set --file-wait /sfm-containers-data/containers
 
+# if filter streams were running under supervisor in 2.3 or earlier, replace old sfm-data paths with 2.4+ paths
+if  [ "$(ls -A /etc/supervisor/conf.d)" ]
+then
+  sed -i.bak 's/sfm-data/sfm-containers-data/' /etc/supervisor/conf.d/*.conf
+  sed -i.bak 's/sfm-data/sfm-collection-set-data/' /etc/supervisor/conf.d/*.json
+fi
+
 echo "Starting supervisor"
 supervisord -c /etc/supervisor/supervisord.conf
 
