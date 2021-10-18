@@ -1,11 +1,13 @@
 # gwul/sfm-base:2.4.0
 #FROM gwul/sfm-base@sha256:dc6f305631f756d9c25517b6322ec83a024c11c3e1e1d7be742d74a57b1f1028
-FROM sfm-base@python-3-9-7
+# Python 3.8.12:buster
+FROM gwul/sfm-base@sha256:0b80a3d3562cdb4d631fbb55b9bd24889312838cbd27cd33e14cc0c18405f007
 MAINTAINER Social Feed Manager <sfm@gwu.edu>
 
 # Install supervisor
 RUN apt-get update && apt-get install -y \
     supervisor=3.3*
+#     supervisor=4.2*
 VOLUME /etc/supervisor/conf.d
 
 ADD . /opt/sfm-twitter-harvester/
@@ -15,4 +17,5 @@ RUN pip install -r requirements/common.txt -r requirements/release.txt
 ADD docker/stream-harvester/invoke.sh /opt/sfm-setup/
 RUN chmod +x /opt/sfm-setup/invoke.sh
 
+#ENTRYPOINT ["tail", "-f", "/dev/null"]
 ENTRYPOINT ["/opt/sfm-setup/invoke.sh"]
