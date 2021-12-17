@@ -7,6 +7,8 @@ from dateutil.parser import parse as date_parse
 import json
 import sys
 
+from twarc.expansions import ensure_flattened
+
 SEARCH_URL = "https://api.twitter.com/1.1/search/tweets.json"
 TIMELINE_URL = "https://api.twitter.com/1.1/statuses/user_timeline.json"
 SEARCH_URL_2 = re.compile(r"https://api.twitter.com/2/tweets/(?:search/(?:recent|all)|sample/stream)")
@@ -52,8 +54,8 @@ class TwitterRestWarcIter2(BaseWarcIter):
         # Ignore error messages
         if not isinstance(json_obj, dict) or not 'data' in json_obj:
             return
-        # Both search and timeline hold a list of tweets in "data"
-        tweet_list = json_obj.get("data", [])
+        # Both search and timeline hold a list of tweets in "data" but need to be "flattened" to include expansions
+        tweet_list = ensure_flattened(json_obj)
         for status in tweet_list:
             yield "twitter_status", status["id"], date_parse(status["created_at"]), status
 

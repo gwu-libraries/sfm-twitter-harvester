@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 
 from __future__ import absolute_import
+from datetime import datetime
 import logging
 import re
 import json
+import pytz
 import requests
 
 from twarc import Twarc, Twarc2
@@ -14,9 +16,12 @@ from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
 log = logging.getLogger(__name__)
 
 QUEUE = "twitter_rest_harvester"
-# Leaving default as v1
+
 SEARCH_ROUTING_KEY = "harvest.start.twitter.twitter_search"
 TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
+SEARCH2_ROUTING_KEY = "harvest.start.twitter2.twitter_search_2"
+TIMELINE2_ROUTING_KEY = "harvest.start.twitter2.twitter_user_timeline_2"
+ACADEMIC_SEARCH_ROUTING_KEY = "harvest.start.twitter2.twitter_academic_search"
 
 status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
@@ -40,6 +45,9 @@ class TwitterHarvester(BaseHarvester):
             self._create_twarc()
             self.search()
         elif harvest_type == "twitter_search_2":
+            self._create_twarc2()
+            self.search_2()
+        elif harvest_type == "twitter_academic_search":
             self._create_twarc2()
             self.search_2()
         elif harvest_type == "twitter_filter":
@@ -96,14 +104,13 @@ class TwitterHarvester(BaseHarvester):
 
         since_id = self.state_store.get_state(__name__,
                                               u"{}.since_id".format(self._search_id())) if incremental else None
-
-        query, geocode = self._search_parameters()
-        if self.message.get("options", {}).get("twitter_academic_research", False):
+        query, geocode, start_time, end_time, limit = self._search_parameters2()
+        if self.message.get("options").get("twitter_academic_search", False):
             if geocode is not None:
-                query += " point_radius:[" + " ".join(geocode.split(",")) + "]"
-            self._harvest_tweets_2(self.twarc.search_all(query, since_id=since_id))
+                query = "".join([query, " point_radius:[", geocode,"]"])
+            self._harvest_tweets_2(self.twarc.search_all(query, since_id=since_id, start_time=start_time, end_time=end_time, max_results=100), limit)
         elif geocode is None:
-            self._harvest_tweets_2(self.twarc.search_recent(query, since_id=since_id))
+            self._harvest_tweets_2(self.twarc.search_recent(query, since_id=since_id, start_time=start_time, end_time=end_time, max_results=100), limit)
         else:
             log.error("geocodes only supported in Twitter API v2 for Academic Research")
 
@@ -115,6 +122,28 @@ class TwitterHarvester(BaseHarvester):
             query = self.message["seeds"][0]["token"]
             geocode = None
         return query, geocode
+
+    def _search_parameters2(self):
+        if type(self.message["seeds"][0]["token"]) is dict:
+            query = self.message["seeds"][0]["token"].get("query")
+            geocode = self.message["seeds"][0]["token"].get("geocode")
+            if self.message["seeds"][0]["token"].get("start_time"):
+                start_time = datetime.fromisoformat(self.message["seeds"][0]["token"]["start_time"]).astimezone(pytz.utc)
+            else: 
+                start_time = None
+            if self.message["seeds"][0]["token"].get("end_time"):
+                end_time = datetime.fromisoformat(self.message["seeds"][0]["token"]["end_time"]).astimezone(pytz.utc)
+            else: 
+                end_time = None
+            limit = self.message["seeds"][0]["token"].get("limit")
+        else:
+            query = self.message["seeds"][0]["token"]
+            geocode = None
+            start_time = None
+            end_time = None
+            limit = None
+
+        return query, geocode, start_time, end_time, limit
 
     def _search_id(self):
         query, geocode = self._search_parameters()
@@ -303,7 +332,7 @@ class TwitterHarvester(BaseHarvester):
             if error['code'] in code:
                 return True
         return False
-        
+
     @staticmethod
     def _result_to_reason(result):
         if result == "unauthorized":
@@ -322,17 +351,25 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
 
-    def _harvest_tweets_2(self, tweets):
+    def _harvest_tweets_2(self, tweets, limit=None):
         # max_tweet_id = None
-        if 'data' not in tweets:
-            return
-        for count, tweet in enumerate(tweets['data']):
-            if not count % 100:
-                log.debug("Harvested %s tweets", count)
-            self.result.harvest_counter["tweets"] += 1
-            if self.stop_harvest_seeds_event.is_set():
-                log.debug("Stopping since stop event set.")
-                break
+        for page in tweets:
+            if 'data' not in page:
+                return
+            for count, tweet in enumerate(page['data']):
+                if not count % 100:
+                    log.debug("Harvested %s tweets", count)
+                self.result.harvest_counter["tweets"] += 1
+                if limit and self.result.harvest_counter["tweets"] >= limit:
+                    log.debug("Stopping since limit reached.")
+                    self.stop_harvest_seeds_event.set()
+                    #break
+                if self.stop_harvest_seeds_event.is_set():
+                    log.debug("Stopping since stop event set.")
+                    break
+            else:
+                continue  
+            break
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
@@ -341,6 +378,8 @@ class TwitterHarvester(BaseHarvester):
         if harvest_type == "twitter_search":
             self.process_search_warc(warc_filepath)
         elif harvest_type == "twitter_search_2":
+            self.process_search_warc_2(warc_filepath)
+        elif harvest_type == "twitter_academic_search":
             self.process_search_warc_2(warc_filepath)
         elif harvest_type == "twitter_filter":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
@@ -440,4 +479,4 @@ class TwitterHarvester(BaseHarvester):
 
 
 if __name__ == "__main__":
-    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY])
+    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY, SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY])

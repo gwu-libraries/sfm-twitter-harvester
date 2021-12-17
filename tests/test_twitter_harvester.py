@@ -50,7 +50,7 @@ base_search_message_2 = {
     "path": "/collections/test_collection_set/collection_id",
     "seeds": [
         {
-            "token": "gelman"
+            "token": {"query": "gelman"}
         }
     ],
     "credentials": {
@@ -475,7 +475,7 @@ class TestTwitterHarvester2(tests.TestCase):
     @patch("twitter_harvester.Twarc2", autospec=True)
     def test_search_2(self, mock_twarc_class):
         mock_twarc = MagicMock(spec=Twarc2)
-        mock_twarc.search_recent.side_effect = [join_tweets(tweet1_2, tweet2_2), ()]
+        mock_twarc.search_recent.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
         # Return mock_twarc when instantiating a twarc.
         mock_twarc_class.side_effect = [mock_twarc]
 
@@ -485,7 +485,7 @@ class TestTwitterHarvester2(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
-        self.assertEqual([call("gelman", since_id=None)], mock_twarc.search_recent.mock_calls)
+        self.assertEqual([call("gelman", since_id=None, start_time=None, end_time=None, max_results=100)], mock_twarc.search_recent.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
     @patch("twitter_harvester.Twarc2", autospec=True)
@@ -493,16 +493,19 @@ class TestTwitterHarvester2(tests.TestCase):
         # Backward-compatibility for geocode parameters v2: "point_radius".
         # Only available for Twitter's Academic Research product track search.
         mock_twarc = MagicMock(spec=Twarc2)
-        mock_twarc.search_all.side_effect = [join_tweets(tweet1_2, tweet2_2), ()]
+        mock_twarc.search_all.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
         # Return mock_twarc when instantiating a twarc.
         mock_twarc_class.side_effect = [mock_twarc]
 
         search_message = copy.deepcopy(base_search_message_2)
         search_message["seeds"][0]["token"] = {
             "query": "gelman",
-            "geocode": "38.899434,-77.036449,25mi"
+            "geocode": "-77.036449 38.899434 25mi",
+            "start_time": None,
+            "end_time": None,
+            "limit": None,
         }
-        search_message["options"]["twitter_academic_research"] = True
+        search_message["options"]["twitter_academic_search"] = True
 
         self.harvester.message = search_message
         self.harvester.harvest_seeds()
@@ -510,7 +513,8 @@ class TestTwitterHarvester2(tests.TestCase):
         mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
                                                  tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
                                                  tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
-        self.assertEqual([call("gelman point_radius:[38.899434 -77.036449 25mi]", since_id=None)],
+
+        self.assertEqual([call("gelman point_radius:[-77.036449 38.899434 25mi]", since_id=None, start_time=None, end_time=None, max_results=100)],
                          mock_twarc.search_all.mock_calls)
         self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
 
@@ -518,7 +522,7 @@ class TestTwitterHarvester2(tests.TestCase):
     def test_user_timeline_2(self, mock_twarc_class):
         mock_twarc = MagicMock(spec=Twarc2)
         # Expecting 2 user timelines. First returns 2 tweets. Second returns none.
-        mock_twarc.timeline.side_effect = [join_tweets(tweet1_2, tweet2_2), ()]
+        mock_twarc.timeline.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
         # Expecting 2 calls to get for user lookup
         mock_response1 = MagicMock()
         mock_response1.status_code = 200
@@ -547,7 +551,7 @@ class TestTwitterHarvester2(tests.TestCase):
 
         mock_twarc = MagicMock(spec=Twarc2)
         # Expecting 2 timelines. First returns 1 tweets. Second returns none.
-        mock_twarc.timeline.side_effect = [tweet2_2, ()]
+        mock_twarc.timeline.side_effect = [[tweet2_2, ()]]
         # Expecting 2 calls to get for user lookup
         mock_response1 = MagicMock()
         mock_response1.status_code = 200
