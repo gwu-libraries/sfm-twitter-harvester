@@ -351,9 +351,9 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
 
-    def _harvest_tweets_2(self, tweets, limit=None):
+    def _harvest_tweets_2(self, pages, limit=None):
         # max_tweet_id = None
-        for page in tweets:
+        for page in pages:
             if 'data' not in page:
                 return
             for count, tweet in enumerate(page['data']):
@@ -363,13 +363,9 @@ class TwitterHarvester(BaseHarvester):
                 if limit and self.result.harvest_counter["tweets"] >= limit:
                     log.debug("Stopping since limit reached.")
                     self.stop_harvest_seeds_event.set()
-                    #break
                 if self.stop_harvest_seeds_event.is_set():
                     log.debug("Stopping since stop event set.")
-                    break
-            else:
-                continue
-            break
+                    return
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
