@@ -1,23 +1,25 @@
 # sfm-twitter-harvester
-Harvesters for twitter content as part of [Social Feed Manager](http://gwu-libraries.github.io/sfm-ui).
+Harvesters for twitter content as part of [Social Feed Manager](https://gwu-libraries.github.io/sfm-ui).
 
 [![Build Status](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester.svg?branch=master)](https://travis-ci.org/gwu-libraries/sfm-twitter-harvester)
 
-Provides harvesters for Twitter [REST API](https://dev.twitter.com/rest/public) and [Streaming API](https://dev.twitter.com/streaming/overview).
+Provides harvesters for [Twitter v1 and v2 APIs](https://developer.twitter.com/en/docs/twitter-api/).
 
 Harvesting is performed by [Twarc](https://github.com/edsu/twarc) and captured by a modified version of [WarcProx](https://github.com/gwu-libraries/warcprox).
 
 ## Development
 
-For information on development and running tests, see the [development documentation](http://sfm.readthedocs.io/en/latest/development.html).
+For information on development and running tests, see the [development documentation](https://sfm.readthedocs.io/en/latest/development.html).
 
-When running tests, provide Twitter credentials either as a `test_config.py` file or environment variables (`TWITTER_CONSUMER_KEY`,
-`TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN` and `TWITTER_ACCESS_TOKEN_SECRET`).  An example `test_config.py` looks like:
+When running tests, provide Twitter credentials either as a `test_config.py` file or environment variables (`TWITTER_CONSUMER_KEY`, `TWITTER_CONSUMER_SECRET`, `TWITTER_ACCESS_TOKEN`, `TWITTER_ACCESS_TOKEN_SECRET` and for the Twitter v2 API `TWITTER_BEARER_TOKEN`).  An example `test_config.py` looks like:
 
         TWITTER_CONSUMER_KEY = "EHdoTksBfgGflP5nUalEfhaeo"
         TWITTER_CONSUMER_SECRET = "ZtUpemtBkf2cEmaqiy52Dd343ihFu9PAiLebuMOmqN0QtXeAlen"
         TWITTER_ACCESS_TOKEN = "411876914-c2yZjbk1np0Z5MWEFYYQKSQNFFGBXd8T4k90YkJl"
         TWITTER_ACCESS_TOKEN_SECRET = "jK9QOmn5VRF5mfgAN6
+        TWITTER_BEARER_TOKEN = 'AAAAAAAAAAAAAAAAAAAAAAn6cn6sBA57n6uaABRalD7AIFEABxzAoj8F5MV%3DIxlklPFn3b1CDoLu0tSfbDaP6xvOo8ueJkbzH5u6nu0urAQwh6'
+
+If only the v2 API is used, it is sufficient to configure the variable `TWITTER_BEARER_TOKEN`, the other variable need to be defined but may be empty.
 
 ## Running as a service
 ### Running as a service for the REST API.
