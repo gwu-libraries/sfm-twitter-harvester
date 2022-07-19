@@ -4,15 +4,17 @@ import logging
 import twarc.json2csv
 import argparse
 from twarc_csv import dataframe_converter
+import sys
 
 log = logging.getLogger(__name__)
 
 QUEUE = "twitter_rest_exporter"
 SEARCH_ROUTING_KEY = "export.start.twitter.twitter_search"
 TIMELINE_ROUTING_KEY = "export.start.twitter.twitter_user_timeline"
-SEARCH2_ROUTING_KEY = "harvest.start.twitter2.twitter_search_2"
-TIMELINE2_ROUTING_KEY = "harvest.start.twitter2.twitter_user_timeline_2"
-ACADEMIC_SEARCH_ROUTING_KEY = "harvest.start.twitter2.twitter_academic_search"
+QUEUE2 = "twitter_rest_exporter2"
+SEARCH2_ROUTING_KEY = "export.start.twitter2.twitter_search_2"
+TIMELINE2_ROUTING_KEY = "export.start.twitter2.twitter_user_timeline_2"
+ACADEMIC_SEARCH_ROUTING_KEY = "export.start.twitter2.twitter_academic_search"
 
 class BaseTwitterTwoStatusTable(BaseTable):
     """
@@ -111,7 +113,7 @@ if __name__ == "__main__":
     args, extras = parser.parse_known_args()
     sys.argv = sys.argv[:1] + extras
     if args.twitter_version == '2':
-        TwitterRestExporter2.main(TwitterRestExporter2, QUEUE, [SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY])
+        TwitterRestExporter2.main(TwitterRestExporter2, QUEUE2, [SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY])
     else:
         TwitterRestExporter.main(TwitterRestExporter, QUEUE,
                              [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY])
