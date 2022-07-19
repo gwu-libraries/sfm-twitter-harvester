@@ -96,7 +96,7 @@ class TwitterHarvester(BaseHarvester):
 
         query, geocode = self._search_parameters()
         self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
-    
+
     def search_2(self):
         assert len(self.message.get("seeds", [])) == 1
 
@@ -129,11 +129,11 @@ class TwitterHarvester(BaseHarvester):
             geocode = self.message["seeds"][0]["token"].get("geocode")
             if self.message["seeds"][0]["token"].get("start_time"):
                 start_time = datetime.fromisoformat(self.message["seeds"][0]["token"]["start_time"]).astimezone(pytz.utc)
-            else: 
+            else:
                 start_time = None
             if self.message["seeds"][0]["token"].get("end_time"):
                 end_time = datetime.fromisoformat(self.message["seeds"][0]["token"]["end_time"]).astimezone(pytz.utc)
-            else: 
+            else:
                 end_time = None
             limit = self.message["seeds"][0]["token"].get("limit")
         else:
@@ -323,7 +323,7 @@ class TwitterHarvester(BaseHarvester):
             else:
                 raise e
         return result, user
- 
+
     @staticmethod
     def _has_error_code(resp, code):
         if isinstance(code, int):
@@ -351,9 +351,9 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
 
-    def _harvest_tweets_2(self, tweets, limit=None):
+    def _harvest_tweets_2(self, pages, limit=None):
         # max_tweet_id = None
-        for page in tweets:
+        for page in pages:
             if 'data' not in page:
                 return
             for count, tweet in enumerate(page['data']):
@@ -363,13 +363,9 @@ class TwitterHarvester(BaseHarvester):
                 if limit and self.result.harvest_counter["tweets"] >= limit:
                     log.debug("Stopping since limit reached.")
                     self.stop_harvest_seeds_event.set()
-                    #break
                 if self.stop_harvest_seeds_event.is_set():
                     log.debug("Stopping since stop event set.")
-                    break
-            else:
-                continue  
-            break
+                    return
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
@@ -397,7 +393,7 @@ class TwitterHarvester(BaseHarvester):
 
         since_id = self.state_store.get_state(__name__,
                                               u"{}.since_id".format(self._search_id())) if incremental else None
-       
+
         max_tweet_id = self._process_tweets(TwitterRestWarcIter(warc_filepath))
 
         # Update state store
@@ -431,7 +427,7 @@ class TwitterHarvester(BaseHarvester):
                     self.state_store.set_state(__name__, key,
                                                max(self.state_store.get_state(__name__, key) or 0, tweet.get("id")))
                 self._process_tweet(tweet)
- 
+
     def process_user_timeline_warc_2(self, warc_filepath):
         incremental = self.message.get("options", {}).get("incremental", False)
 
@@ -460,7 +456,7 @@ class TwitterHarvester(BaseHarvester):
                 max_tweet_id = max(max_tweet_id or 0, tweet.get("id"))
                 self._process_tweet(tweet)
         return max_tweet_id
-    
+
     def _process_tweets_2(self, warc_iter):
         max_tweet_id = None
 
