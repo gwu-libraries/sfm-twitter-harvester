@@ -40,9 +40,9 @@ class BaseTwitterTwoStatusTable(BaseTable):
         (Probably need to refactor for the sake of greater efficiency, since this creates a new DataFrame for every single Tweet.)
         '''
         dfc = self.DataFrameConverter()
-        df = dfc.process(item)
+        df = dfc.process([item])
         # DataFrame.values returns an array of rows -- we want only a single row
-        return df.values[0]
+        return df.fillna('').values[0]
 
     def id_field(self):
         return "id"
