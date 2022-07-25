@@ -3,8 +3,18 @@ from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
 import logging
 import twarc.json2csv
 import argparse
-from twarc_csv import dataframe_converter
+from twarc_csv import dataframe_converter as dc
 import sys
+from sfmutils.exporter import ExportResult, to_xlsx, to_lineoriented_json
+from sfmutils.utils import datetime_now
+import iso8601
+import os
+import shutil
+from petl.util.base import dicts as _dicts
+import petl
+from petl.io.sources import write_source_from_arg
+from sfmutils.result import BaseResult, Msg, STATUS_SUCCESS, STATUS_FAILURE, STATUS_RUNNING
+import pandas as pd
 
 log = logging.getLogger(__name__)
 
@@ -23,7 +33,7 @@ class BaseTwitterTwoStatusTable(BaseTable):
 
     def __init__(self, warc_paths, dedupe, item_date_start, item_date_end,
                  seed_uids, warc_iter_cls, segment_row_size):
-        self.DataFrameConverter = dataframe_converter.DataFrameConverter
+        #self.DataFrameConverter = dataframe_converter.DataFrameConverter
         BaseTable.__init__(self, warc_paths, dedupe, item_date_start,
                            item_date_end, seed_uids, warc_iter_cls,
                            segment_row_size)
@@ -32,17 +42,19 @@ class BaseTwitterTwoStatusTable(BaseTable):
         '''
         Returns CSV columns from DataFrameConverter
         '''
-        return self.DataFrameConverter().columns
+        #return self.DataFrameConverter().columns
+        return None
 
     def _row(self, item):
         '''
         Returns a single row for the CSV, using the twarc_csv DataFrameConverter class.
         (Probably need to refactor for the sake of greater efficiency, since this creates a new DataFrame for every single Tweet.)
         '''
-        dfc = self.DataFrameConverter()
-        df = dfc.process([item])
+        #dfc = self.DataFrameConverter()
+        #df = dfc.process([item])
         # DataFrame.values returns an array of rows -- we want only a single row
-        return df.fillna('').values[0]
+        #return df.fillna('').values[0]
+        return item
 
     def id_field(self):
         return "id"
@@ -85,6 +97,24 @@ def create_twitter_status_table_class(twitter_table_cls, twitter_warc_iter_cls=T
     
     return TwitterRestStatusTable
 
+def to_twarc2_table(table, filepath, converter, mode='csv'):
+    '''Uses the twarc-csv module's DataFrameConverter to produce the desired output from a batch of Tweets (JSON).
+    :param table: an iterable from the BaseStatusTable's __iter__method (already chunked for size)
+    :param filepath: a destination filepath for this output
+    :param converter: instance of twarc_csv.dataframe_converter.DataFrameConverter (we accept as param to avoid recreating it on each batch
+    :param mode: one of (csv, tsv, xlsx)'''
+    # Skip null placeholder for header row -- header will be provided by the DataFrameConverter methods
+    table = [t for t in table if t]
+    df = converter.process(table)
+    log.debug(f'DataFrame contains {len(df)} rows.')
+    if mode == 'csv':
+        df.to_csv(filepath, index=False)
+    elif mode == 'tsv':
+        df.to_csv(filepath, index=False, sep='\t')
+    elif mode == 'xlsx':
+        # Turn off URL encoding for Excel, otherwise we get warnings 
+        with pd.ExcelWriter(filepath, engine='xlsxwriter',engine_kwargs={'options': {'strings_to_urls': False}}) as writer:
+            df.to_excel(writer, index=False)
 
 class TwitterRestExporter(BaseExporter):
     def __init__(self, api_base_url, working_path, mq_config=None,
@@ -104,6 +134,95 @@ class TwitterRestExporter2(BaseExporter):
                               mq_config=mq_config,
                               warc_base_path=warc_base_path)
 
+    def on_message(self):
+        assert self.message
+        export_id = self.message["id"]
+        log.info("Performing export %s", export_id)
+
+        self.result = ExportResult()
+        self.result.started = datetime_now()
+
+        # Send status indicating that it is running
+        self._send_response_message(STATUS_RUNNING, self.routing_key, export_id, self.result)
+
+        # Get the WARCs from the API
+        collection_id = self.message.get("collection", {}).get("id")
+        seed_ids = []
+        seed_uids = []
+        for seed in self.message.get("seeds", []):
+            seed_ids.append(seed["id"])
+            seed_uids.append(seed["uid"])
+
+        if (collection_id or seed_ids) and not (collection_id and seed_ids):
+            harvest_date_start = self.message.get("harvest_date_start")
+            harvest_date_end = self.message.get("harvest_date_end")
+            # Only request seed ids if < 20. If use too many, will cause problems calling API.
+            # 20 is an arbitrary number
+            warc_paths = self._get_warc_paths(collection_id, seed_ids if len(seed_ids) <= 20 else None,
+                                              harvest_date_start, harvest_date_end)
+            export_format = self.message["format"]
+            export_segment_size = self.message["segment_size"]
+            export_path = self.message["path"]
+            dedupe = self.message.get("dedupe", False)
+            item_date_start = iso8601.parse_date(
+                self.message["item_date_start"]) if "item_date_start" in self.message else None
+            item_date_end = iso8601.parse_date(
+                self.message["item_date_end"]) if "item_date_end" in self.message else None
+            temp_path = os.path.join(self.working_path, "tmp")
+            base_filepath = os.path.join(temp_path, export_id)
+
+            if warc_paths:
+
+                # Clean the temp directory
+                if os.path.exists(temp_path):
+                    shutil.rmtree(temp_path)
+                os.makedirs(temp_path)
+
+                # Using pandas/twarc_csv instead of PETL
+                export_formats = ("csv", "tsv", "xlsx")
+
+                # Other possibilities: XML, databases, HDFS
+                if export_format == "json_full":
+                    self._full_json_export(warc_paths, base_filepath, dedupe, item_date_start, item_date_end, seed_uids,
+                                           export_segment_size)
+                elif export_format == "dehydrate":
+                    tables = self.table_cls(warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
+                                            export_segment_size)
+                    for idx, table in enumerate(tables):
+                        filepath = "{}_{}.txt".format(base_filepath, str(idx + 1).zfill(3))
+                        log.info("Exporting to %s", filepath)
+                        petl.totext(table, filepath, template="{{{}}}\n".format(tables.id_field()))
+                elif export_format in export_formats:
+                    # Using default options -- need to check for cases when that may not be desired
+                    converter = dc.DataFrameConverter()
+                    tables = self.table_cls(warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
+                                            export_segment_size)
+                    for idx, table in enumerate(tables):
+                        filepath = "{}_{}.{}".format(base_filepath, str(idx + 1).zfill(3),
+                                                     export_format)
+                        log.debug("Exporting to %s", filepath)
+                        to_twarc2_table(table, filepath, converter, mode=export_format)
+                else:
+                    self.result.errors.append(
+                        Msg(CODE_UNSUPPORTED_EXPORT_FORMAT, "{} is not supported".format(export_format)))
+                    self.result.success = False
+
+                # Move files from temp path to export path
+                if os.path.exists(export_path):
+                    shutil.rmtree(export_path)
+                shutil.move(temp_path, export_path)
+
+            else:
+                self.result.errors.append(Msg(CODE_NO_WARCS, "No WARC files from which to export"))
+                self.result.success = False
+
+        else:
+            self.result.errors.append(Msg(CODE_BAD_REQUEST, "Request export of a seed or collection."))
+            self.result.success = False
+
+        self.result.ended = datetime_now()
+        self._send_response_message(STATUS_SUCCESS if self.result.success else STATUS_FAILURE, self.routing_key,
+                                    export_id, self.result)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
