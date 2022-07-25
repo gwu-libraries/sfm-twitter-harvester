@@ -15,6 +15,7 @@ import petl
 from petl.io.sources import write_source_from_arg
 from sfmutils.result import BaseResult, Msg, STATUS_SUCCESS, STATUS_FAILURE, STATUS_RUNNING
 import pandas as pd
+from itertools import islice, chain
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,10 @@ QUEUE2 = "twitter_rest_exporter2"
 SEARCH2_ROUTING_KEY = "export.start.twitter2.twitter_search_2"
 TIMELINE2_ROUTING_KEY = "export.start.twitter2.twitter_user_timeline_2"
 ACADEMIC_SEARCH_ROUTING_KEY = "export.start.twitter2.twitter_academic_search"
+
+# Maximum size of DataFrame -- may need to adjust experimentally
+# Consider making an ENV variable
+MAX_DATAFRAME_ROWS = 25000
 
 class BaseTwitterTwoStatusTable(BaseTable):
     """
@@ -97,24 +102,53 @@ def create_twitter_status_table_class(twitter_table_cls, twitter_warc_iter_cls=T
     
     return TwitterRestStatusTable
 
-def to_twarc2_table(table, filepath, converter, mode='csv'):
+
+def grouper(iterable, n):
+    '''Helper class, modified from https://docs.python.org/3/library/itertools.html#itertools-recipes, per the suggestions at https://stackoverflow.com/questions/8991506/iterate-an-iterator-by-chunks-of-n-in-python. Used to subdivide the export segments into smaller chunks for processing.
+    :param iterable: a Python iterable
+    :param n: size of groups
+    '''
+    # TESTING NEEDED to confirm that this is memory efficient
+    it = iter(iterable)
+    while True:
+        chunk_it = islice(it, n)
+        try:
+            first_el = next(chunk_it)
+        except StopIteration:
+            return
+        yield chain((first_el,), chunk_it)
+
+
+def to_twarc2_table(table, filepath, converter, format='csv'):
     '''Uses the twarc-csv module's DataFrameConverter to produce the desired output from a batch of Tweets (JSON).
     :param table: an iterable from the BaseStatusTable's __iter__method (already chunked for size)
     :param filepath: a destination filepath for this output
     :param converter: instance of twarc_csv.dataframe_converter.DataFrameConverter (we accept as param to avoid recreating it on each batch
     :param mode: one of (csv, tsv, xlsx)'''
     # Skip null placeholder for header row -- header will be provided by the DataFrameConverter methods
-    table = [t for t in table if t]
-    df = converter.process(table)
-    log.debug(f'DataFrame contains {len(df)} rows.')
-    if mode == 'csv':
-        df.to_csv(filepath, index=False)
-    elif mode == 'tsv':
-        df.to_csv(filepath, index=False, sep='\t')
-    elif mode == 'xlsx':
-        # Turn off URL encoding for Excel, otherwise we get warnings 
-        with pd.ExcelWriter(filepath, engine='xlsxwriter',engine_kwargs={'options': {'strings_to_urls': False}}) as writer:
-            df.to_excel(writer, index=False)
+    table = islice(table, 1, None)
+    # Iterate over smaller chunks of the given export segment size, to keep DataFrame memory usage within manageable limits
+    # Note that if the segment size is not evenly subdividable by the MAX_DATAFRAME_ROWS, some chunks will be suboptimally small
+    for i, rows in enumerate(grouper(table, MAX_DATAFRAME_ROWS)):
+        df = converter.process(rows)
+        log.debug(f'DataFrame contains {len(df)} rows.')
+        # On the first pass, create the file
+        if i == 0:
+            mode = 'w'
+        # On subsequent passes, append
+        else:
+            mode = 'a'
+        if format == 'csv':
+            # Only write the header if the file is being created
+            df.to_csv(filepath, index=False, mode=mode, header=not os.path.exists(filepath))
+        elif format == 'tsv':
+            df.to_csv(filepath, index=False, mode=mode, header=not os.path.exists(filepath), sep='\t')
+        elif format == 'xlsx':
+            # Turn off URL encoding for Excel, otherwise we get warnings 
+            with pd.ExcelWriter(filepath, engine='xlsxwriter', mode='w', engine_kwargs={'options': {'strings_to_urls': False}}) as writer:
+                df.to_excel(writer, index=False, header=True)
+
+
 
 class TwitterRestExporter(BaseExporter):
     def __init__(self, api_base_url, working_path, mq_config=None,
@@ -179,7 +213,7 @@ class TwitterRestExporter2(BaseExporter):
                 os.makedirs(temp_path)
 
                 # Using pandas/twarc_csv instead of PETL
-                export_formats = ("csv", "tsv", "xlsx")
+                twarc_export_formats = ("csv", "tsv", "xlsx")
 
                 # Other possibilities: XML, databases, HDFS
                 if export_format == "json_full":
@@ -192,16 +226,19 @@ class TwitterRestExporter2(BaseExporter):
                         filepath = "{}_{}.txt".format(base_filepath, str(idx + 1).zfill(3))
                         log.info("Exporting to %s", filepath)
                         petl.totext(table, filepath, template="{{{}}}\n".format(tables.id_field()))
-                elif export_format in export_formats:
+                elif export_format in twarc_export_formats:
                     # Using default options -- need to check for cases when that may not be desired
                     converter = dc.DataFrameConverter()
+                    # Can't append to xlsx files from DataFrames using the xlsxwriter engine, so we need to limit the file sizes to the largest size of DataFrame we are willing to accommodate
+                    if export_format == 'xlsx':
+                        export_segment_size = MAX_DATAFRAME_ROWS
                     tables = self.table_cls(warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
                                             export_segment_size)
                     for idx, table in enumerate(tables):
                         filepath = "{}_{}.{}".format(base_filepath, str(idx + 1).zfill(3),
                                                      export_format)
                         log.debug("Exporting to %s", filepath)
-                        to_twarc2_table(table, filepath, converter, mode=export_format)
+                        to_twarc2_table(table, filepath, converter, format=export_format)
                 else:
                     self.result.errors.append(
                         Msg(CODE_UNSUPPORTED_EXPORT_FORMAT, "{} is not supported".format(export_format)))
