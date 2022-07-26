@@ -5,7 +5,7 @@ import twarc.json2csv
 import argparse
 from twarc_csv import dataframe_converter as dc
 import sys
-from sfmutils.exporter import ExportResult, to_xlsx, to_lineoriented_json
+from sfmutils.exporter import ExportResult, to_xlsx, to_lineoriented_json, CODE_WARC_MISSING, CODE_NO_WARCS, CODE_BAD_REQUEST
 from sfmutils.utils import datetime_now
 import iso8601
 import os
@@ -147,7 +147,10 @@ def to_twarc2_table(table, filepath, converter, format='csv'):
             # Turn off URL encoding for Excel, otherwise we get warnings 
             with pd.ExcelWriter(filepath, engine='xlsxwriter', mode='w', engine_kwargs={'options': {'strings_to_urls': False}}) as writer:
                 df.to_excel(writer, index=False, header=True)
-
+        elif format == 'json':
+            # Write to JSON-L format
+            # May need to incorporate custom handler from exporter.py
+            df.to_json(filepath, orient='records', lines=True, date_format='iso')
 
 
 class TwitterRestExporter(BaseExporter):
@@ -213,7 +216,7 @@ class TwitterRestExporter2(BaseExporter):
                 os.makedirs(temp_path)
 
                 # Using pandas/twarc_csv instead of PETL
-                twarc_export_formats = ("csv", "tsv", "xlsx")
+                twarc_export_formats = ("csv", "tsv", "xlsx", "json")
 
                 # Other possibilities: XML, databases, HDFS
                 if export_format == "json_full":
