@@ -150,7 +150,8 @@ def to_twarc2_table(table, filepath, converter, format='csv'):
         elif format == 'json':
             # Write to JSON-L format
             # May need to incorporate custom handler from exporter.py
-            df.to_json(filepath, orient='records', lines=True, date_format='iso')
+            with open(filepath, mode=mode) as f:
+                df.to_json(f, orient='records', lines=True, date_format='iso')
 
 
 class TwitterRestExporter(BaseExporter):
