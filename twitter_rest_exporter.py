@@ -176,7 +176,7 @@ class TwitterRestExporter2(BaseExporter):
         assert self.message
         export_id = self.message["id"]
         log.info("Performing export %s", export_id)
-
+        log.debug(self.message)
         self.result = ExportResult()
         self.result.started = datetime_now()
 
@@ -231,8 +231,8 @@ class TwitterRestExporter2(BaseExporter):
                         log.info("Exporting to %s", filepath)
                         petl.totext(table, filepath, template="{{{}}}\n".format(tables.id_field()))
                 elif export_format in twarc_export_formats:
-                    # Using default options -- need to check for cases when that may not be desired
-                    converter = dc.DataFrameConverter()
+                    # Disable deduplication, because the BaseWARCIter class already handles that (based on user input)
+                    converter = dc.DataFrameConverter(allow_duplicates=True)
                     # Can't append to xlsx files from DataFrames using the xlsxwriter engine, so we need to limit the file sizes to the largest size of DataFrame we are willing to accommodate
                     if export_format == 'xlsx':
                         export_segment_size = MAX_DATAFRAME_ROWS
