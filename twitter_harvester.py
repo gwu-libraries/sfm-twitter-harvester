@@ -105,6 +105,10 @@ class TwitterHarvester(BaseHarvester):
         since_id = self.state_store.get_state(__name__,
                                               u"{}.since_id".format(self._search_id())) if incremental else None
         query, geocode, start_time, end_time, limit = self._search_parameters2()
+        # v.2 API does not allow the conjunction of start/end_time params with since_id
+        # Let since_id take precedence
+        if since_id:
+            start_time, end_time = None, None
         if self.message.get("options").get("twitter_academic_search", False):
             if geocode is not None:
                 query = "".join([query, " point_radius:[", geocode,"]"])
