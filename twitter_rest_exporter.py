@@ -129,7 +129,11 @@ def to_twarc2_table(table, filepath, converter, format='csv'):
     table = islice(table, 1, None)
     # Iterate over smaller chunks of the given export segment size, to keep DataFrame memory usage within manageable limits
     # Note that if the segment size is not evenly subdividable by the MAX_DATAFRAME_ROWS, some chunks will be suboptimally small
-    for i, rows in enumerate(grouper(table, MAX_DATAFRAME_ROWS)):
+    try:
+        max_rows = int(os.environ['MAX_DATAFRAME_ROWS'])
+    except:
+        max_rows = MAX_DATAFRAME_ROWS
+    for i, rows in enumerate(grouper(table, max_rows)):
         df = converter.process(rows)
         log.debug(f'DataFrame contains {len(df)} rows.')
         # On the first pass, create the file
@@ -235,7 +239,10 @@ class TwitterRestExporter2(BaseExporter):
                     converter = dc.DataFrameConverter(allow_duplicates=True)
                     # Can't append to xlsx files from DataFrames using the xlsxwriter engine, so we need to limit the file sizes to the largest size of DataFrame we are willing to accommodate
                     if export_format == 'xlsx':
-                        export_segment_size = MAX_DATAFRAME_ROWS
+                        try:
+                            export_segment_size = int(os.environ['MAX_DATAFRAME_ROWS'])
+                        except:
+                            export_segment_size = MAX_DATAFRAME_ROWS
                     tables = self.table_cls(warc_paths, dedupe, item_date_start, item_date_end, seed_uids,
                                             export_segment_size)
                     for idx, table in enumerate(tables):
