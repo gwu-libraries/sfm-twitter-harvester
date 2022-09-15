@@ -233,7 +233,10 @@ class TwitterRestExporter2(BaseExporter):
                     for idx, table in enumerate(tables):
                         filepath = "{}_{}.txt".format(base_filepath, str(idx + 1).zfill(3))
                         log.info("Exporting to %s", filepath)
-                        petl.totext(table, filepath, template="{{{}}}\n".format(tables.id_field()))
+                        # Convert Tweet dicts to lists of ID's for petl
+                        id_tbl = [[row['id']] for row in table if row]
+                        id_tbl = [['id']] + id_tbl
+                        petl.totext(id_tbl, filepath, template="{{{}}}\n".format(tables.id_field()))
                 elif export_format in twarc_export_formats:
                     # Disable deduplication, because the BaseWARCIter class already handles that (based on user input)
                     converter = dc.DataFrameConverter(allow_duplicates=True)
