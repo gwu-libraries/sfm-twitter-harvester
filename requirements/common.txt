@@ -1,5 +1,5 @@
-twarc==2.11.1
-twarc-csv==0.5.2
+twarc==2.12.0
+twarc-csv==0.6.0
 python-dateutil==2.8.2
 
 # Master support Py3, but no release. This should be in sfm-utils setup.py once released.
