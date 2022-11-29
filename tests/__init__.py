@@ -10,9 +10,11 @@ except ImportError:
     TWITTER_CONSUMER_SECRET = os.environ.get("TWITTER_CONSUMER_SECRET", "fake")
     TWITTER_ACCESS_TOKEN = os.environ.get("TWITTER_ACCESS_TOKEN", "fake")
     TWITTER_ACCESS_TOKEN_SECRET = os.environ.get("TWITTER_ACCESS_TOKEN_SECRET", "fake")
+    TWITTER_BEARER_TOKEN = os.environ.get("TWITTER_BEARER_TOKEN", "fake")
 
-test_config_available = True if TWITTER_CONSUMER_KEY != "fake" and TWITTER_CONSUMER_SECRET != "fake" \
-                                and TWITTER_ACCESS_TOKEN != "fake" and TWITTER_ACCESS_TOKEN_SECRET != "fake" else False
+test_config_available = (TWITTER_CONSUMER_KEY != "fake" and TWITTER_CONSUMER_SECRET != "fake"
+                         and TWITTER_ACCESS_TOKEN != "fake" and TWITTER_ACCESS_TOKEN_SECRET != "fake") \
+                         or TWITTER_BEARER_TOKEN != "fake"
 
 mq_port_available = True
 with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:

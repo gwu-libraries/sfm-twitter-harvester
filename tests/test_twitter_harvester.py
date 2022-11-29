@@ -3,7 +3,7 @@ import tests
 import unittest
 from mock import MagicMock, patch, call
 from twitter_harvester import TwitterHarvester
-from twarc import Twarc
+from twarc import Twarc, Twarc2
 import threading
 import shutil
 import tempfile
@@ -17,7 +17,7 @@ from sfmutils.state_store import DictHarvestStateStore
 from sfmutils.harvester import HarvestResult, EXCHANGE, CODE_TOKEN_NOT_FOUND, STATUS_RUNNING, \
     STATUS_SUCCESS, STATUS_STOPPING
 from sfmutils.warc_iter import IterItem
-from twitter_rest_warc_iter import TwitterRestWarcIter
+from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
 from requests.exceptions import HTTPError
 
 base_search_message = {
@@ -35,6 +35,30 @@ base_search_message = {
         "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
         "access_token": tests.TWITTER_ACCESS_TOKEN,
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
+    },
+    "options": {
+        "tweets": True
+    },
+    "collection_set": {
+        "id": "test_collection_set"
+    }
+}
+
+base_search_message_2 = {
+    "id": "test:1",
+    "type": "twitter_search_2",
+    "path": "/collections/test_collection_set/collection_id",
+    "seeds": [
+        {
+            "token": {"query": "gelman"}
+        }
+    ],
+    "credentials": {
+        "consumer_key": tests.TWITTER_CONSUMER_KEY,
+        "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
+        "access_token": tests.TWITTER_ACCESS_TOKEN,
+        "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET,
+        "bearer_token": tests.TWITTER_BEARER_TOKEN
     },
     "options": {
         "tweets": True
@@ -67,6 +91,36 @@ base_timeline_message = {
         "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
         "access_token": tests.TWITTER_ACCESS_TOKEN,
         "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
+    },
+    "collection_set": {
+        "id": "test_collection_set"
+    }
+}
+
+base_timeline_message_2 = {
+    "id": "test:1",
+    "type": "twitter_user_timeline_2",
+    "path": "/collections/test_collection_set/collection_id",
+    "seeds": [
+        {
+            "id": "seed_id1",
+            "uid": "28101965"
+        },
+        {
+            "id": "seed_id2",
+            "token": "gelmanlibrary"
+        }
+
+    ],
+    "options": {
+        "tweets": True
+    },
+    "credentials": {
+        "consumer_key": tests.TWITTER_CONSUMER_KEY,
+        "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
+        "access_token": tests.TWITTER_ACCESS_TOKEN,
+        "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET,
+        "bearer_token": tests.TWITTER_BEARER_TOKEN
     },
     "collection_set": {
         "id": "test_collection_set"
@@ -401,6 +455,323 @@ class TestTwitterHarvester(tests.TestCase):
         iter_class.assert_called_once_with("test.warc.gz")
         # State updated
         self.assertEqual(660065173563158500,
+                         self.harvester.state_store.get_state("twitter_harvester", "timeline.481186914.since_id"))
+
+
+class TestTwitterHarvester2(tests.TestCase):
+    def setUp(self):
+        self.working_path = tempfile.mkdtemp()
+
+        self.harvester = TwitterHarvester(self.working_path)
+        self.harvester.state_store = DictHarvestStateStore()
+        self.harvester.message = base_search_message_2
+        self.harvester.result = HarvestResult()
+        self.harvester.stop_harvest_seeds_event = threading.Event()
+
+    def tearDown(self):
+        if os.path.exists(self.working_path):
+            shutil.rmtree(self.working_path)
+
+    @patch("twitter_harvester.Twarc2", autospec=True)
+    def test_search_2(self, mock_twarc_class):
+        mock_twarc = MagicMock(spec=Twarc2)
+        mock_twarc.search_recent.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
+        # Return mock_twarc when instantiating a twarc.
+        mock_twarc_class.side_effect = [mock_twarc]
+
+        self.harvester.message = base_search_message_2
+        self.harvester.harvest_seeds()
+
+        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
+        self.assertEqual([call("gelman", since_id=None, start_time=None, end_time=None, max_results=100)], mock_twarc.search_recent.mock_calls)
+        self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
+
+    @patch("twitter_harvester.Twarc2", autospec=True)
+    def test_academic_search(self, mock_twarc_class):
+        # Backward-compatibility for geocode parameters v2: "point_radius".
+        # Only available for Twitter's Academic Research product track search.
+        mock_twarc = MagicMock(spec=Twarc2)
+        mock_twarc.search_all.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
+        # Return mock_twarc when instantiating a twarc.
+        mock_twarc_class.side_effect = [mock_twarc]
+
+        search_message = copy.deepcopy(base_search_message_2)
+        search_message["seeds"][0]["token"] = {
+            "query": "gelman",
+            "geocode": "-77.036449 38.899434 25mi",
+            "start_time": None,
+            "end_time": None,
+            "limit": None,
+        }
+        search_message["options"]["twitter_academic_search"] = True
+
+        self.harvester.message = search_message
+        self.harvester.harvest_seeds()
+
+        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
+
+        self.assertEqual([call("gelman point_radius:[-77.036449 38.899434 25mi]", since_id=None, start_time=None, end_time=None, max_results=100)],
+                         mock_twarc.search_all.mock_calls)
+        self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
+
+    @patch("twitter_harvester.Twarc2", autospec=True)
+    def test_user_timeline_2(self, mock_twarc_class):
+        mock_twarc = MagicMock(spec=Twarc2)
+        # Expecting 2 user timelines. First returns 2 tweets. Second returns none.
+        mock_twarc.timeline.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
+        # Expecting 2 calls to get for user lookup
+        mock_response1 = MagicMock()
+        mock_response1.status_code = 200
+        mock_response1.json.return_value = {'data': {'protected': False, 'username': 'gwtweets', 'id': '28101965', 'name': 'GW Tweets'}}
+        mock_response2 = MagicMock()
+        mock_response2.status_code = 200
+        mock_response2.json.return_value = {'data': {"id": "9710852", "protected": False, 'username': 'justin_littman', 'name': 'Justin Littman'}}
+        mock_twarc.get.side_effect = [mock_response1, mock_response2]
+        # Return mock_twarc when instantiating a twarc.
+        mock_twarc_class.side_effect = [mock_twarc]
+
+        self.harvester.message = base_timeline_message_2
+        self.harvester.harvest_seeds()
+
+        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
+        self.assertEqual([call(user="28101965", since_id=None), call(user="9710852", since_id=None)],
+                         mock_twarc.timeline.mock_calls)
+        self.assertDictEqual({"tweets": 2}, self.harvester.result.harvest_counter)
+
+    @patch("twitter_harvester.Twarc2", autospec=True)
+    def test_incremental_user_timeline_2(self, twarc_class):
+        message = copy.deepcopy(base_timeline_message_2)
+        message["options"]["incremental"] = True
+
+        mock_twarc = MagicMock(spec=Twarc2)
+        # Expecting 2 timelines. First returns 1 tweets. Second returns none.
+        mock_twarc.timeline.side_effect = [[tweet2_2, ()]]
+        # Expecting 2 calls to get for user lookup
+        mock_response1 = MagicMock()
+        mock_response1.status_code = 200
+        mock_response1.json.return_value = {'data': {'protected': False, 'username': 'gwtweets', 'id': '28101965', 'name': 'GW Tweets'}}
+        mock_response2 = MagicMock()
+        mock_response2.status_code = 200
+        mock_response2.json.return_value = {'data': {"id": "9710852", "protected": False, 'username': 'justin_littman', 'name': 'Justin Littman'}}
+        mock_twarc.get.side_effect = [mock_response1, mock_response2]
+        # Return mock_twarc when instantiating a twarc.
+        twarc_class.side_effect = [mock_twarc]
+
+        self.harvester.message = message
+        self.harvester.state_store.set_state("twitter_harvester", "timeline.28101965.since_id", 605726286741434400)
+        self.harvester.harvest_seeds()
+
+        twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                            tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                            tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
+        self.assertEqual(
+            [call(user="28101965", since_id=605726286741434400),
+             call(user="9710852", since_id=None)], mock_twarc.timeline.mock_calls)
+        self.assertDictEqual({"tweets": 1}, self.harvester.result.harvest_counter)
+
+    @patch("twitter_harvester.Twarc2", autospec=True) 
+    def test_user_timeline_with_missing_users_2(self, mock_twarc_class):
+        mock_twarc = MagicMock(spec=Twarc2)
+        # Expecting 2 calls to user_lookup, both which return nothing
+        mock_twarc.user_lookup.side_effect = [[], []]
+        # Return mock_twarc when instantiating a twarc.
+        mock_twarc_class.side_effect = [mock_twarc]
+
+        mock_response = MagicMock()
+        mock_response.status_code = 200
+        response = {'errors': [{'value': 'missing1', 'detail': 'Could not find user with usernames: [missing1].',
+                                'title': 'Not Found Error',
+                                'resource_type': 'user', 'parameter': 'usernames', 'resource_id': 'missing1',
+                                'type': 'https://api.twitter.com/2/problems/resource-not-found'}]}
+        mock_response.json.return_value = response
+        mock_twarc.get.return_value = mock_response
+
+        message = copy.deepcopy(base_timeline_message_2)
+        message["seeds"] = [
+            {
+                "id": "seed_id1",
+                "token": "missing1"
+            },
+            {
+                "id": "seed_id2",
+                "token": "missing2"
+            }
+
+        ]
+        self.harvester.message = message
+        self.harvester.harvest_seeds()
+
+        mock_twarc_class.assert_called_once_with(tests.TWITTER_CONSUMER_KEY, tests.TWITTER_CONSUMER_SECRET,
+                                                 tests.TWITTER_ACCESS_TOKEN, tests.TWITTER_ACCESS_TOKEN_SECRET,
+                                                 tests.TWITTER_BEARER_TOKEN, connection_errors=5, metadata=True)
+
+        self.assertEqual(
+            [call('https://api.twitter.com/2/users/by/username/missing1?user.fields=protected'),
+             call().json(),
+             call('https://api.twitter.com/2/users/by/username/missing2?user.fields=protected'),
+             call().json()],
+             mock_twarc.get.mock_calls)
+        self.assertEqual(2, len(self.harvester.result.warnings))
+        self.assertEqual(CODE_TOKEN_NOT_FOUND, self.harvester.result.warnings[0].code)
+        self.assertEqual("seed_id1", self.harvester.result.warnings[0].extras["seed_id"])
+    
+    def mock_user_lookup(self, response, response_code=200):
+        mock_twarc = MagicMock(spec=Twarc2)
+        mock_response = MagicMock()
+        mock_response.status_code = response_code
+        mock_response.json.return_value = response
+        mock_twarc.get.return_value = mock_response
+        if response_code != 200:
+            mock_twarc.get.side_effect = HTTPError(response=mock_response)
+        return mock_twarc
+
+    def mock_user_lookup_verify(self, mockobj, *args, **kwargs):
+        mockobj.get.assert_called_once_with(*args, **kwargs)
+
+    def test_lookup_screen_name_2(self):
+        response = {'data': {'protected': False, 'username': 'justin_littman', 'id': '481186914', 'name': 'Justin Littman'}}
+
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(response)
+
+        self.assertEqual(('OK', response['data']),
+                         self.harvester._lookup_user_2(id="481186914", id_type="user_id"))
+    
+    def test_lookup_missing_screen_name_2(self):
+        response = {'errors': [{'value': '481186914', 'detail': 'Could not find user with ids: [481186914].',
+                                'title': 'Not Found Error', 'resource_type': 'user', 'parameter': 'ids',
+                                'resource_id': '481186914', 'type': 'https://api.twitter.com/2/problems/resource-not-found'}]}
+
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(response)
+
+        self.assertEqual(('not_found', None), self.harvester._lookup_user_2(id="481186914", id_type="user_id"))
+
+        self.mock_user_lookup_verify(mock_twarc,
+                                     'https://api.twitter.com/2/users/481186914?user.fields=protected')
+
+    def test_lookup_user_id_2(self):
+        response = {'data': {'protected': False, 'username': 'justin_littman', 'id': '481186914', 'name': 'Justin Littman'}}
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(response)
+
+        self.assertEqual(('OK', response['data']),
+                         self.harvester._lookup_user_2(id="justin_littman", id_type="screen_name"))
+
+        self.mock_user_lookup_verify(mock_twarc,
+                                     'https://api.twitter.com/2/users/by/username/justin_littman?user.fields=protected')
+
+    def test_lookup_missing_user_id_2(self):
+        response = {'errors': [{'value': 'justin_littman', 'detail': 'Could not find user with usernames: [justin_littman].', 'title': 'Not Found Error',
+                                'resource_type': 'user', 'parameter': 'usernames', 'resource_id': 'justin_littman',
+                                'type': 'https://api.twitter.com/2/problems/resource-not-found'}]}
+
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(response)
+
+        self.assertEqual(('not_found', None), self.harvester._lookup_user_2(id="justin_littman", id_type="screen_name"))
+
+        self.mock_user_lookup_verify(mock_twarc,
+                                     'https://api.twitter.com/2/users/by/username/justin_littman?user.fields=protected')
+
+    def test_lookup_invalid_user_id_2(self):
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(None, 400)
+
+        self.assertEqual(('not_found', None), self.harvester._lookup_user_2(id="123456789012345678901234567890", id_type="user_id"))
+
+        self.mock_user_lookup_verify(mock_twarc,
+                                     'https://api.twitter.com/2/users/123456789012345678901234567890?user.fields=protected')
+
+    def test_lookup_suspended_screen_name_2(self):
+        response = {'errors': [{'parameter': 'ids', 'resource_id': '481186914', 'value': '481186914',
+                                'detail': 'User has been suspended: [481186914].', 'title': 'Forbidden',
+                                'resource_type': 'user', 'type': 'https://api.twitter.com/2/problems/resource-not-found'}]}
+
+        self.harvester.twarc = mock_twarc = self.mock_user_lookup(response)
+
+        self.assertEqual(('suspended', None), self.harvester._lookup_user_2(id="481186914", id_type="user_id"))
+
+        self.mock_user_lookup_verify(mock_twarc,
+                                     'https://api.twitter.com/2/users/481186914?user.fields=protected')
+
+    @staticmethod
+    def _iter_items(items):
+        # This is useful for mocking out a warc iter
+        iter_items = []
+        for item in items:
+            iter_items.append(IterItem(None, None, None, None, item))
+        return iter_items
+    
+    @patch("twitter_harvester.TwitterRestWarcIter2", autospec=True)
+    def test_process_search_2(self, iter_class):
+        mock_iter = MagicMock(spec=TwitterRestWarcIter2)
+        mock_iter.__iter__.side_effect = [self._iter_items(tweet2_2['data']).__iter__()]
+        # Return mock_iter when instantiating a TwitterRestWarcIter2.
+        iter_class.side_effect = [mock_iter]
+
+        self.harvester.message = base_search_message_2
+        self.harvester.process_warc("test.warc.gz")
+
+        self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
+        iter_class.assert_called_once_with("test.warc.gz")
+        # State updated
+        self.assertEqual(None, self.harvester.state_store.get_state("twitter_harvester", "gelman.since_id"))
+   
+    @patch("twitter_harvester.TwitterRestWarcIter2", autospec=True)
+    def test_process_search_incremental_2(self, iter_class):
+        message = copy.deepcopy(base_search_message_2)
+        message["options"]["incremental"] = True
+
+        mock_iter = MagicMock(spec=TwitterRestWarcIter2)
+        mock_iter.__iter__.side_effect = [self._iter_items(tweet2_2['data']).__iter__()]
+        # Return mock_iter when instantiating a TwitterRestWarcIter2.
+        iter_class.side_effect = [mock_iter]
+
+        self.harvester.state_store.set_state("twitter_harvester", "gelman.since_id", 605726286741434400)
+        self.harvester.message = message
+        self.harvester.process_warc("test.warc.gz")
+
+        self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
+        iter_class.assert_called_once_with("test.warc.gz")
+        # State updated
+        self.assertEqual(660065173563158529,
+                         self.harvester.state_store.get_state("twitter_harvester", "gelman.since_id"))
+
+    @patch("twitter_harvester.TwitterRestWarcIter2", autospec=True)
+    def test_process_user_timeline_2(self, iter_class):
+        mock_iter = MagicMock(spec=TwitterRestWarcIter)
+        mock_iter.__iter__.side_effect = [self._iter_items(join_tweets(tweet1_2, tweet2_2)['data']).__iter__()]
+        # Return mock_iter when instantiating a TwitterRestWarcIter.
+        iter_class.side_effect = [mock_iter]
+
+        self.harvester.message = base_timeline_message_2
+        self.harvester.process_warc("test.warc.gz")
+
+        self.assertDictEqual({"tweets": 2}, self.harvester.result.stats_summary())
+        iter_class.assert_called_once_with("test.warc.gz")
+        # # Nothing added to state
+        self.assertEqual(0, len(self.harvester.state_store.state))
+
+    @patch("twitter_harvester.TwitterRestWarcIter2", autospec=True)
+    def test_process_incremental_user_timeline_2(self, iter_class):
+        message = copy.deepcopy(base_timeline_message_2)
+        message["options"]["incremental"] = True
+
+        mock_iter = MagicMock(spec=TwitterRestWarcIter2)
+        mock_iter.__iter__.side_effect = [self._iter_items(tweet2_2['data']).__iter__()]
+        # Return mock_iter when instantiating a TwitterRestWarcIter2.
+        iter_class.side_effect = [mock_iter]
+
+        self.harvester.message = message
+        self.harvester.state_store.set_state("twitter_harvester", "timeline.481186914.since_id", 605726286741434400)
+        self.harvester.process_warc("test.warc.gz")
+
+        self.assertDictEqual({"tweets": 1}, self.harvester.result.stats_summary())
+        iter_class.assert_called_once_with("test.warc.gz")
+        # State updated
+        self.assertEqual(660065173563158529,
                          self.harvester.state_store.get_state("twitter_harvester", "timeline.481186914.since_id"))
 
 

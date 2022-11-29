@@ -1,5 +1,29 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+import copy
+
+def join_tweets(*tweets):
+    res = {}
+    for tweet in tweets:
+        for k in ('data', 'errors', 'includes', 'meta'):
+            if k not in tweet:
+                continue
+            c = copy.deepcopy(tweet[k])
+            if k not in res:
+                res[k] = c
+            elif k == 'meta':
+                pass
+            elif k == 'includes':
+                for kk in c:
+                    if kk not in res['includes']:
+                        res[k][kk] = c[kk]
+                    else:
+                        for i in c[kk]:
+                            res[k][kk].append(i)
+            else:
+                for i in c:
+                    res[k].append(i)
+    return res
 
 tweet1 = {
     "created_at": "Tue Jun 02 13:22:55 +0000 2015",
@@ -1452,4 +1476,603 @@ tweet8 = {
   "favorited": False,
   "retweeted": False,
   "lang": "en"
+}
+
+tweet1_2 = {
+    'data': [
+        {
+            'lang': 'en',
+            'created_at': '2015-06-02T13:22:55.000Z',
+            'id': '605726286741434368',
+            'source': 'Twitter Web Client',
+            'author_id': '481186914',
+            'reply_settings': 'everyone',
+            'geo': {
+                'place_id': '01fbe706f872cb32'
+            },
+            'text': 'At LC for @archemail today:  Thinking about overlap between email archiving, web archiving, and social media archiving.',
+            'public_metrics': {
+                'retweet_count': 0,
+                'reply_count': 0,
+                'like_count': 0,
+                'quote_count': 0
+            },
+            'possibly_sensitive': False,
+            'conversation_id': '605726286741434368'
+        }
+    ],
+    'includes': {
+        'users': [
+            {
+                'public_metrics': {
+                    'followers_count': 796,
+                    'following_count': 72,
+                    'tweet_count': 2254,
+                    'listed_count': 30
+                },
+                'entities': {
+                    'description': {
+                        'mentions': [
+                            {
+                                'start': 25,
+                                'end': 36,
+                                'username': 'DigitalLib'
+                            },
+                            {
+                                'start': 49,
+                                'end': 63,
+                                'username': 'gelmanlibrary'
+                            },
+                            {
+                                'start': 66,
+                                'end': 82,
+                                'username': 'librarycongress'
+                            }
+                        ]
+                    }
+                },
+                'username': 'justin_littman',
+                'name': 'Justin Littman',
+                'id': '481186914',
+                'verified': False,
+                'location': 'Fairfax, VA',
+                'url': '',
+                'description': 'Software dev at Stanford @DigitalLib. Previously @gelmanlibrary & @librarycongress.',
+                'protected': False,
+                'profile_image_url': 'https://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg',
+                'created_at': '2012-02-02T12:19:18.000Z'
+            }
+        ],
+        'places': [
+            {
+                'geo': {
+                    'type': 'Feature',
+                    'bbox': [-77.119401, 38.801826, -76.909396, 38.9953797],
+                    'properties': {}
+                },
+                'name': 'Washington',
+                'full_name': 'Washington, DC',
+                'place_type': 'city',
+                'id': '01fbe706f872cb32',
+                'country_code': 'US',
+                'country': 'United States'
+            }
+        ]
+    }
+}
+
+# tweet2 has a url
+tweet2_2 = {
+    'data': [
+        {
+            'entities': {
+                'urls': [
+                    {
+                        'start': 69,
+                        'end': 92,
+                        'url': 'https://t.co/OHZki6pXEe',
+                        'expanded_url': 'http://bit.ly/1ipwd0B',
+                        'display_url': 'bit.ly/1ipwd0B',
+                        'status': 200,
+                        'unwound_url': 'https://library.gwu.edu/collecting-social-media-data'
+                    }
+                ]
+            },
+            'reply_settings': 'everyone',
+            'public_metrics': {
+                'retweet_count': 9,
+                'reply_count': 0,
+                'like_count': 9,
+                'quote_count': 0
+            },
+            'conversation_id': '660065173563158529',
+            'source': 'Twitter Web Client',
+            'author_id': '481186914',
+            'possibly_sensitive': False,
+            'created_at': '2015-10-30T12:06:15.000Z',
+            'text': 'My new blog post on techniques for harvesting social media to WARCs: https://t.co/OHZki6pXEe',
+            'lang': 'en',
+            'id': '660065173563158529'
+        }
+    ],
+    'includes': {
+        'users': [
+            {
+                'location': 'Fairfax, VA',
+                'url': '',
+                'username': 'justin_littman',
+                'entities': {
+                    'description': {
+                        'mentions': [
+                            {
+                                'start': 25,
+                                'end': 36,
+                                'username': 'DigitalLib'
+                            },
+                            {
+                                'start': 49,
+                                'end': 63,
+                                'username': 'gelmanlibrary'
+                            },
+                            {
+                                'start': 66,
+                                'end': 82,
+                                'username': 'librarycongress'
+                            }
+                        ]
+                    }
+                },
+                'name': 'Justin Littman',
+                'id': '481186914',
+                'created_at': '2012-02-02T12:19:18.000Z',
+                'verified': False,
+                'description': 'Software dev at Stanford @DigitalLib. Previously @gelmanlibrary & @librarycongress.',
+                'protected': False,
+                'public_metrics': {
+                    'followers_count': 796,
+                    'following_count': 72,
+                    'tweet_count': 2254,
+                    'listed_count': 30
+                },
+                'profile_image_url': 'https://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg'
+            }
+        ]
+    }
+}
+
+# tweet3 has "attachments" (API v1: "extended_entities") 
+tweet3_2 = {
+    'data': [
+        {
+            'id': '727894186415013888',
+            'lang': 'en',
+            'attachments': {
+                'media_keys': [
+                    '16_727894166961831936']
+            },
+            'created_at': '2016-05-04T16:14:32.000Z',
+            'source': 'Twitter Web Client',
+            'author_id': '2875189485',
+            'public_metrics': {
+                'retweet_count': 0,
+                'reply_count': 0,
+                'like_count': 0,
+                'quote_count': 0
+            },
+            'text': 'Test tweet 9. Tweet with a GIF. https://t.co/x6AYFg3REg',
+            'reply_settings': 'everyone',
+            'conversation_id': '727894186415013888',
+            'possibly_sensitive': False,
+            'entities': {
+                'urls': [
+                    {
+                        'start': 32,
+                        'end': 55,
+                        'url': 'https://t.co/x6AYFg3REg',
+                        'expanded_url': 'https://twitter.com/jlittman_dev/status/727894186415013888/photo/1',
+                        'display_url': 'pic.twitter.com/x6AYFg3REg'
+                    }
+                ]
+            }
+        }
+    ],
+    'includes': {
+        'media': [
+            {
+                'preview_image_url': 'https://pbs.twimg.com/tweet_video_thumb/Chn_42fWwAASuva.jpg',
+                'media_key': '16_727894166961831936',
+                'height': 230,
+                'type': 'animated_gif',
+                'width': 300
+            }
+        ],
+        'users': [
+            {
+                'profile_image_url': 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png',
+                'verified': False,
+                'id': '2875189485',
+                'name': 'Justin Littman dev',
+                'url': '',
+                'description': '',
+                'public_metrics': {
+                    'followers_count': 0,
+                    'following_count': 0,
+                    'tweet_count': 29,
+                    'listed_count': 2
+                },
+                'protected': False,
+                'username': 'jlittman_dev',
+                'created_at': '2014-11-13T15:49:55.000Z'
+            }
+        ]
+    }
+}
+
+# tweet4 has "referenced_tweets" (API v1: "quoted_status")
+tweet4_2 = {
+    'data': [
+        {
+            'entities': {
+                'urls': [
+                    {
+                        'start': 18,
+                        'end': 41,
+                        'url': 'https://t.co/tBu6RRJoKr',
+                        'expanded_url': 'https://twitter.com/justin_littman/status/503873833213104128',
+                        'display_url': 'twitter.com/justin_littman…'
+                    }
+                ]
+            },
+            'lang': 'en',
+            'created_at': '2016-05-04T18:39:55.000Z',
+            'referenced_tweets': [
+                {
+                    'type': 'quoted',
+                    'id': '503873833213104128'
+                }
+            ],
+            'id': '727930772691292161',
+            'source': 'Twitter Web Client',
+            'author_id': '2875189485',
+            'reply_settings': 'everyone',
+            'text': 'Test 10. Retweet. https://t.co/tBu6RRJoKr',
+            'public_metrics': {
+                'retweet_count': 0,
+                'reply_count': 0,
+                'like_count': 0,
+                'quote_count': 0
+            },
+            'possibly_sensitive': False,
+            'conversation_id': '727930772691292161'
+        }
+    ],
+    'includes': {
+        'users': [
+            {
+                'public_metrics': {
+                    'followers_count': 0,
+                    'following_count': 0,
+                    'tweet_count': 29,
+                    'listed_count': 2
+                },
+                'username': 'jlittman_dev',
+                'name': 'Justin Littman dev',
+                'id': '2875189485',
+                'verified': False,
+                'url': '',
+                'description': '',
+                'protected': False,
+                'profile_image_url': 'https://abs.twimg.com/sticky/default_profile_images/default_profile_normal.png',
+                'created_at': '2014-11-13T15:49:55.000Z'
+            },
+            {
+                'public_metrics': {
+                    'followers_count': 796,
+                    'following_count': 72,
+                    'tweet_count': 2254,
+                    'listed_count': 30
+                },
+                'entities': {
+                    'description': {
+                        'mentions': [
+                            {
+                                'start': 25,
+                                'end': 36,
+                                'username': 'DigitalLib'
+                            },
+                            {
+                                'start': 49,
+                                'end': 63,
+                                'username': 'gelmanlibrary'
+                            },
+                            {
+                                'start': 66,
+                                'end': 82,
+                                'username': 'librarycongress'
+                            }
+                        ]
+                    }
+                },
+                'username': 'justin_littman',
+                'name': 'Justin Littman',
+                'id': '481186914',
+                'verified': False,
+                'location': 'Fairfax, VA',
+                'url': '',
+                'description': 'Software dev at Stanford @DigitalLib. Previously @gelmanlibrary & @librarycongress.',
+                'protected': False,
+                'profile_image_url': 'https://pbs.twimg.com/profile_images/496478011533713408/GjecBUNj_normal.jpeg',
+                'created_at': '2012-02-02T12:19:18.000Z'
+            }
+        ],
+        'tweets': [
+            {
+                'entities': {
+                    'urls': [
+                        {
+                            'start': 42,
+                            'end': 64,
+                            'url': 'http://t.co/Gz5ybAD6os',
+                            'expanded_url': 'https://twitter.com/justin_littman/status/503873833213104128/photo/1',
+                            'display_url': 'pic.twitter.com/Gz5ybAD6os'
+                        }
+                    ],
+                    'annotations': [
+                        {
+                            'start': 13,
+                            'end': 26,
+                            'probability': 0.7965,
+                            'type': 'Place',
+                            'normalized_text': 'Gelman Library'
+                        }
+                    ]
+                },
+                'lang': 'en',
+                'created_at': '2014-08-25T11:57:38.000Z',
+                'id': '503873833213104128',
+                'source': 'Twitter for Android',
+                'author_id': '481186914',
+                'reply_settings': 'everyone',
+                'attachments': {
+                    'media_keys': [
+                        '3_503873819560665088']
+                },
+                'text': 'First day at Gelman Library. First tweet. http://t.co/Gz5ybAD6os',
+                'public_metrics': {
+                    'retweet_count': 0,
+                    'reply_count': 4,
+                    'like_count': 6,
+                    'quote_count': 0
+                },
+                'possibly_sensitive': False,
+                'conversation_id': '503873833213104128'
+            }
+        ]
+    }
+}
+
+# tweet 8 is a quote tweet nested in a retweet
+tweet8_2 = {
+    'data': [
+        {
+            'reply_settings': 'everyone',
+            'referenced_tweets': [
+                {
+                    'type': 'retweeted',
+                    'id': '918436293247406080'
+                }
+            ],
+            'text': 'RT @ClimateCentral: Wildfire season in the American West is now two and a half months longer than it was 40 years ago. Our wildfire report…',
+            'id': '918735887264972800',
+            'entities': {
+                'annotations': [
+                    {
+                        'start': 43,
+                        'end': 55,
+                        'probability': 0.4504,
+                        'type': 'Place',
+                        'normalized_text': 'American West'
+                    }
+                ],
+                'mentions': [
+                    {
+                        'start': 3,
+                        'end': 18,
+                        'username': 'ClimateCentral',
+                        'id': '15463610'
+                    }
+                ]
+            },
+            'possibly_sensitive': False,
+            'conversation_id': '918735887264972800',
+            'public_metrics': {
+                'retweet_count': 168,
+                'reply_count': 0,
+                'like_count': 0,
+                'quote_count': 0
+            },
+            'lang': 'en',
+            'author_id': '1074184813',
+            'source': 'Twitter for iPhone',
+            'created_at': '2017-10-13T07:11:19.000Z'
+        }
+    ],
+    'includes': {
+        'users': [
+            {
+                'description': '#VWars 🧛🏻\u200d♂️#LutherSwann #Damon #TVD #Delena #IanSomerhalder #NikkiReed #SOMEREED #Bodhi👶🏻 ❤️#ISF 🐶🐱#Yoga🧘🏻\u200d♀️#BeautifulHumans #HarryPotter🦉⚡️🏆',
+                'name': 'DamonSmolderhalder😈',
+                'entities': {
+                    'description': {
+                        'hashtags': [
+                            {
+                                'start': 0,
+                                'end': 6,
+                                'tag': 'VWars'
+                            },
+                            {
+                                'start': 12,
+                                'end': 24,
+                                'tag': 'LutherSwann'
+                            },
+                            {
+                                'start': 25,
+                                'end': 31,
+                                'tag': 'Damon'
+                            },
+                            {
+                                'start': 32,
+                                'end': 36,
+                                'tag': 'TVD'
+                            },
+                            {
+                                'start': 37,
+                                'end': 44,
+                                'tag': 'Delena'
+                            },
+                            {
+                                'start': 45,
+                                'end': 60,
+                                'tag': 'IanSomerhalder'
+                            },
+                            {
+                                'start': 61,
+                                'end': 71,
+                                'tag': 'NikkiReed'
+                            },
+                            {
+                                'start': 72,
+                                'end': 81,
+                                'tag': 'SOMEREED'
+                            },
+                            {
+                                'start': 82,
+                                'end': 88,
+                                'tag': 'Bodhi'
+                            },
+                            {
+                                'start': 93,
+                                'end': 97,
+                                'tag': 'ISF'
+                            },
+                            {
+                                'start': 100,
+                                'end': 105,
+                                'tag': 'Yoga'
+                            },
+                            {
+                                'start': 110,
+                                'end': 126,
+                                'tag': 'BeautifulHumans'
+                            },
+                            {
+                                'start': 127,
+                                'end': 139,
+                                'tag': 'HarryPotter'
+                            }
+                        ]
+                    }
+                },
+                'username': 'DElenaTimeless',
+                'public_metrics': {
+                    'followers_count': 1772,
+                    'following_count': 854,
+                    'tweet_count': 43347,
+                    'listed_count': 53
+                },
+                'id': '1074184813',
+                'created_at': '2013-01-09T16:04:14.000Z',
+                'profile_image_url': 'https://pbs.twimg.com/profile_images/600743044535554048/DBgKQQMF_normal.jpg',
+                'url': '',
+                'pinned_tweet_id': '857131921427615744',
+                'protected': False,
+                'verified': False,
+                'location': 'The Universe'
+            },
+            {
+                'description': 'Researching & reporting the science & impacts of climate change 🌎 \nRetweets and shares ≠ endorsement | image: Alexander Gerst/NASA',
+                'name': 'Climate Central',
+                'entities': {
+                    'url': {
+                        'urls': [
+                            {
+                                'start': 0,
+                                'end': 23,
+                                'url': 'https://t.co/1I6UpNcrdn',
+                                'expanded_url': 'https://www.climatecentral.org',
+                                'display_url': 'climatecentral.org'
+                            }
+                        ]
+                    }
+                },
+                'username': 'ClimateCentral',
+                'public_metrics': {
+                    'followers_count': 133300,
+                    'following_count': 6920,
+                    'tweet_count': 61042,
+                    'listed_count': 3963
+                },
+                'id': '15463610',
+                'created_at': '2008-07-17T03:30:32.000Z',
+                'profile_image_url': 'https://pbs.twimg.com/profile_images/1148257751925186560/3AUI4s1P_normal.png',
+                'url': 'https://t.co/1I6UpNcrdn',
+                'protected': False,
+                'verified': True,
+                'location': 'Princeton, NJ'
+            }
+        ],
+        'tweets': [
+            {
+                'reply_settings': 'everyone',
+                'referenced_tweets': [
+                    {
+                        'type': 'quoted',
+                        'id': '878622618886094848'
+                    }
+                ],
+                'text': 'Wildfire season in the American West is now two and a half months longer than it was 40 years ago. Our wildfire report in @YEARSofLIVING ⬇️ https://t.co/nk49r9sS1a',
+                'id': '918436293247406080',
+                'entities': {
+                    'annotations': [
+                        {
+                            'start': 23,
+                            'end': 35,
+                            'probability': 0.472,
+                            'type': 'Place',
+                            'normalized_text': 'American West'
+                        }
+                    ],
+                    'mentions': [
+                        {
+                            'start': 122,
+                            'end': 136,
+                            'username': 'YEARSofLIVING',
+                            'id': '308245641'
+                        }
+                    ],
+                    'urls': [
+                        {
+                            'start': 140,
+                            'end': 163,
+                            'url': 'https://t.co/nk49r9sS1a',
+                            'expanded_url': 'https://twitter.com/yearsofliving/status/878622618886094848',
+                            'display_url': 'twitter.com/yearsofliving/…'
+                        }
+                    ]
+                },
+                'possibly_sensitive': False,
+                'conversation_id': '918436293247406080',
+                'public_metrics': {
+                    'retweet_count': 168,
+                    'reply_count': 7,
+                    'like_count': 99,
+                    'quote_count': 3
+                },
+                'lang': 'en',
+                'author_id': '15463610',
+                'source': 'Twitter for iPhone',
+                'created_at': '2017-10-12T11:20:50.000Z'
+            }
+        ]
+    }
 }
