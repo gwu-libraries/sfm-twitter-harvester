@@ -1,18 +1,20 @@
 #!/usr/bin/env python3
 
 from __future__ import absolute_import
-from datetime import datetime, timedelta, timezone
+from datetime import datetime
 import logging
 import re
 import json
 import pytz
 import requests
+import threading #stream code
 
 from twarc import Twarc, Twarc2
-from twarc.decorators2 import _snowflake2millis, _millis2date
 from sfmutils.harvester import BaseHarvester, Msg
 from twitter_stream_warc_iter import TwitterStreamWarcIter
+from twitter_stream_warc_iter import TwitterStreamWarcIter2
 from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
+from twarc import Twarc2, expansions  #stream code
 
 log = logging.getLogger(__name__)
 
@@ -25,29 +27,6 @@ TIMELINE2_ROUTING_KEY = "harvest.start.twitter2.twitter_user_timeline_2"
 ACADEMIC_SEARCH_ROUTING_KEY = "harvest.start.twitter2.twitter_academic_search"
 
 status_re = re.compile("^https://twitter.com/.+/status/\d+$")
-
-def since_id_to_timestamp(since_id):
-    '''
-    Convert a Twitter since_id to a tz-aware timestamp.
-    :param since_id: an integer
-    '''
-    since_dt = _millis2date(_snowflake2millis(since_id))
-    # Need to make this timestamp TZ aware (on the assumption that it's UTC to begin with)
-    return since_dt.replace(tzinfo=timezone.utc)
-
-def check_timedelta(timestamp, offset_days=7):
-    '''
-    Given a UTC timestamp, check its validity vis-a-vis the allowed window.
-    :param timsetamp: a tz-aware datetime object in UTC timezone
-    :param offset_days: the number of days prior to the current moment to check against the since_id
-    '''
-    today = datetime.now(timezone.utc)
-    delta = timedelta(days=offset_days)
-    # Is the timestamp more recent than offset_days?
-    if today - delta <= timestamp:
-        return timestamp
-    else:
-        return None
 
 class TwitterHarvester(BaseHarvester):
     def __init__(self, working_path, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False,
@@ -72,7 +51,7 @@ class TwitterHarvester(BaseHarvester):
             self.search_2()
         elif harvest_type == "twitter_academic_search":
             self._create_twarc2()
-            self.search_2(harvest_type=harvest_type)
+            self.search_2()
         elif harvest_type == "twitter_filter":
             self._create_twarc()
             self.filter()
@@ -85,6 +64,15 @@ class TwitterHarvester(BaseHarvester):
         elif harvest_type == "twitter_user_timeline_2":
             self._create_twarc2()
             self.user_timeline_2()
+
+        #stream new code 
+
+        elif harvest_type == "stream":
+            self._create_twarc2()
+            self.stream_2()
+
+        #stream new code ends  
+
         else:
             raise KeyError
 
@@ -120,10 +108,7 @@ class TwitterHarvester(BaseHarvester):
         query, geocode = self._search_parameters()
         self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
     
-    def search_2(self, harvest_type="twitter_search_2"):
-        '''
-        :param harvest_type: str of the harvest type (to differentiate behaviors between search_recent and search_all (Academic Search))
-        '''
+    def search_2(self):
         assert len(self.message.get("seeds", [])) == 1
 
         incremental = self.message.get("options", {}).get("incremental", False)
@@ -131,19 +116,6 @@ class TwitterHarvester(BaseHarvester):
         since_id = self.state_store.get_state(__name__,
                                               u"{}.since_id".format(self._search_id())) if incremental else None
         query, geocode, start_time, end_time, limit = self._search_parameters2()
-        # Checks necessary for the search_recent endpoint
-        if (harvest_type == "twitter_search_2"):
-            # If since_id is older than 7 days, ignore
-            if since_id and not check_timedelta(since_id_to_timestamp(since_id)):
-                since_id = None
-            # Ignore the start_time param if outside the window for recent searches
-            # Twitter seems to just ignore the end_time if outside the window
-            if start_time:
-                start_time = check_timedelta(start_time)
-        # v.2 API does not allow the conjunction of start/end_time params with since_id
-        # Let since_id take precedence
-        if since_id:
-            start_time, end_time = None, None
         if self.message.get("options").get("twitter_academic_search", False):
             if geocode is not None:
                 query = "".join([query, " point_radius:[", geocode,"]"])
@@ -202,6 +174,71 @@ class TwitterHarvester(BaseHarvester):
 
         self._harvest_tweets(
             self.twarc.filter(track=track, follow=follow, locations=locations, lang=language, event=self.stop_harvest_seeds_event))
+
+
+    #New stream rule
+
+
+
+
+    def stream_2(self):
+
+        
+
+        # remove any active stream rules
+        rules = self.twarc.get_stream_rules()
+        if "data" in rules and len(rules["data"]) > 0:
+            rule_ids = [r["id"] for r in rules["data"]]
+            self.twarc.delete_stream_rule_ids(rule_ids)
+
+        # make sure they are empty
+        rules = self.twarc.get_stream_rules()
+        assert "data" not in rules
+
+        # add two rules
+        rules = self.twarc.add_stream_rules(
+            [{"value": "twitter", "tag": "modwarc-test"}, {"value": "musk", "tag": "tdwarc-test"}]
+        )
+        assert len(rules["data"]) == 2
+
+        # make sure they are there
+        #rules = self.twarc.get_stream_rules()
+        #assert len(rules["data"]) == 2
+
+        #print("rules",rules)
+
+        #log.debug("rules Adhithya Kiran",rules["data"])
+        #log.debug("rules lenght Adhithya Kiran",len(rules["data"]))
+        e = threading.Event()
+        #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=100)
+        self._process_tweets_stream(self.twarc.stream(event=e,record_keepalive=False),limit=500)
+        
+        
+        
+        
+
+        #self._harvest_tweets_2(self.twarc.stream())
+
+        
+    #This is working using direct call
+
+    # collect some data 
+        #for count, result in enumerate(self.twarc.stream()):
+        # The Twitter API v2 returns the Tweet information and the user, media etc.  separately
+        # so we use expansions.flatten to get all the information in a single JSON
+            #tweet = expansions.flatten(result)
+        # Here we are printing the full Tweet object JSON to the console
+            #print(json.dumps(tweet))
+            #log.debug("json.dumps(tweet)",json.dumps(tweet))
+        # Replace with the desired number of Tweets
+            #if count > 10:
+                #break
+
+
+        
+
+
+    #end of stream rules
 
     def sample(self):
         self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))
@@ -381,7 +418,6 @@ class TwitterHarvester(BaseHarvester):
         return "not found or deleted"
 
     def _harvest_tweets(self, tweets):
-        # max_tweet_id = None
         for count, tweet in enumerate(tweets):
             if not count % 100:
                 log.debug("Harvested %s tweets", count)
@@ -391,14 +427,12 @@ class TwitterHarvester(BaseHarvester):
                 break
 
     def _harvest_tweets_2(self, tweets, limit=None):
-        # max_tweet_id = None
-        # Counter for paginated tweets
-        for i, page in enumerate(tweets):
+        for page in tweets:
             if 'data' not in page:
                 return
             for count, tweet in enumerate(page['data']):
-                if not (count + 1) % 100:
-                    log.debug("Harvested %s tweets", (count + 1) * (i + 1))
+                if not count % 100:                    
+                    log.debug("Harvested %s tweets", count)
                 self.result.harvest_counter["tweets"] += 1
                 if limit and self.result.harvest_counter["tweets"] >= limit:
                     log.debug("Stopping since limit reached.")
@@ -410,6 +444,29 @@ class TwitterHarvester(BaseHarvester):
             else:
                 continue  
             break
+
+
+    # for stream
+
+    def _process_tweets_stream(self, tweets,limit=None):
+        max_tweet_id = None
+        for count, tweet in enumerate(tweets):
+            if not count % 100:
+                log.debug("Harvested %s tweets", count)
+            self.result.harvest_counter["tweets"] += 1    
+            if limit and self.result.harvest_counter["tweets"] >= limit:
+                log.debug("Stopping since limit reached.")
+                self.stop_harvest_seeds_event.set()                
+            if self.stop_harvest_seeds_event.is_set():
+                log.debug("Stopping since stop event set.")
+                break
+            else:
+                continue
+
+
+    #end for stream        
+
+
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
@@ -423,6 +480,10 @@ class TwitterHarvester(BaseHarvester):
             self.process_search_warc_2(warc_filepath)
         elif harvest_type == "twitter_filter":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
+        #code for filter stream
+        elif harvest_type == "stream":
+            self._process_tweets_2(TwitterStreamWarcIter2(warc_filepath))
+        #code end for for filter stream
         elif harvest_type == "twitter_sample":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
         elif harvest_type == "twitter_user_timeline":
@@ -489,6 +550,7 @@ class TwitterHarvester(BaseHarvester):
                                                    int(tweet.get("id"))))
                 self._process_tweet(tweet)
 
+      
     def _process_tweets(self, warc_iter):
         max_tweet_id = None
 
