@@ -8,9 +8,10 @@ RUN apt-get update && apt-get install -y \
 #     supervisor=4.2*
 VOLUME /etc/supervisor/conf.d
 
+ARG build_version=release
 ADD . /opt/sfm-twitter-harvester/
 WORKDIR /opt/sfm-twitter-harvester
-RUN pip install -r requirements/common.txt -r requirements/release.txt
+RUN pip install -r requirements/common.txt -r requirements/${build_version}.txt
 
 ADD docker/stream-harvester/invoke.sh /opt/sfm-setup/
 RUN chmod +x /opt/sfm-setup/invoke.sh
