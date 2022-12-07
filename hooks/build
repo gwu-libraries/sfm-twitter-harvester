@@ -1,8 +1,7 @@
 #!/bin/bash
-DOCKERFILE_PATH="Dockerfile-rest-exporter"
 if [ $DOCKER_TAG == "master" ]
 then
-    docker build . -f $DOCKERFILE_PATH --build-arg build_version=master -t $IMAGE_NAME  
+    docker build . --build-arg build_version=master -t $IMAGE_NAME  
 else
-    docker build . -f $DOCKERFILE_PATH -t $IMAGE_NAME 
+    docker build . -t $IMAGE_NAME 
 fi
