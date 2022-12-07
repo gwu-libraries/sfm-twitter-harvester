@@ -1,4 +1,9 @@
 #!/bin/bash
+echo "IMAGE NAME = ${IMAGE_NAME}"
+echo "REPO NAME = ${DOCKER_REPO}"
+echo "Current directory = $(pwd)"
+echo "Dockerfiles = $(ls Dockerfile*)"
+echo 
 if [ $DOCKER_TAG == "master" ]
 then
     docker build . --build-arg build_version=master -t $IMAGE_NAME  
