@@ -1,9 +1,9 @@
 #!bin/bash
 
 echo $DOCKERFILE_PATH
-if [ $DOCKER_TAG == "master" ]
-then
-    docker build . -f ${DOCKERFILE_PATH} --build-arg build_version=master -t ${IMAGE_NAME}
-else
-    docker build . -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}
-fi
+#if [ $DOCKER_TAG == "master" ]
+#then
+#    docker build . -f ${DOCKERFILE_PATH} --build-arg build_version=master -t ${IMAGE_NAME}
+#else
+#    docker build . -f ${DOCKERFILE_PATH} -t ${IMAGE_NAME}
+#fi
