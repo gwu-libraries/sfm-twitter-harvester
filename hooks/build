@@ -1,12 +1,12 @@
 #!/bin/bash
-echo "IMAGE NAME = ${IMAGE_NAME}"
-echo "REPO NAME = ${DOCKER_REPO}"
-echo "Current directory = $(pwd)"
-echo "Dockerfiles = $(ls Dockerfile*)"
-echo 
+# Extract the Dockerfile suffix from the repo name; need to do this because the DOCKERFILE_PATH variable is not defined when running this script in autobuild
+# Remove the path from the repo name
+DOCKERFILE_SUFFIX=${DOCKER_REPO##*/}
+# Remove the sfm-twitter prefix to extract the name of the Dockerfile
+DOCKERFILE_SUFFIX=${DOCKERFILE_SUFFIX#sfm-twitter}
 if [ $DOCKER_TAG == "master" ]
 then
-    docker build . --build-arg build_version=master -t $IMAGE_NAME  
+    docker build . --build-arg build_version=master -f "Dockerfile${DOCKERFILE_SUFFIX}" -t $IMAGE_NAME  
 else
-    docker build . -t $IMAGE_NAME 
+    docker build . -f "Dockerfile${DOCKERFILE_SUFFIX}" -t $IMAGE_NAME 
 fi
