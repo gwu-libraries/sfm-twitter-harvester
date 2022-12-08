@@ -254,6 +254,10 @@ class TwitterHarvester(BaseHarvester):
         e = threading.Event()
         #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=100)
         self._process_tweets_stream(self.twarc.stream(event=e,record_keepalive=False),limit=500)
+
+        #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=500)
+
+        
         
         
         
