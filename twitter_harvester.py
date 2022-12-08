@@ -473,23 +473,23 @@ class TwitterHarvester(BaseHarvester):
         # max_tweet_id = None
         # Counter for paginated tweets
         for i, page in enumerate(tweets):        
-            for page in tweets:
-                if 'data' not in page:
-                    return
-                for count, tweet in enumerate(page['data']):
-                    if not (count + 1) % 100:
-                        log.debug("Harvested %s tweets", (count + 1) * (i + 1))
-                    self.result.harvest_counter["tweets"] += 1
-                    if limit and self.result.harvest_counter["tweets"] >= limit:
-                        log.debug("Stopping since limit reached.")
-                        self.stop_harvest_seeds_event.set()
-                        #break
-                    if self.stop_harvest_seeds_event.is_set():
-                        log.debug("Stopping since stop event set.")
-                        break
-                else:
-                    continue  
-                break
+            
+            if 'data' not in page:
+                return
+            for count, tweet in enumerate(page['data']):
+                if not (count + 1) % 100:
+                    log.debug("Harvested %s tweets", (count + 1) * (i + 1))
+                self.result.harvest_counter["tweets"] += 1
+                if limit and self.result.harvest_counter["tweets"] >= limit:
+                    log.debug("Stopping since limit reached.")
+                    self.stop_harvest_seeds_event.set()
+                    #break
+                if self.stop_harvest_seeds_event.is_set():
+                    log.debug("Stopping since stop event set.")
+                    break
+            else:
+                continue  
+            break
 
 
     # for stream
