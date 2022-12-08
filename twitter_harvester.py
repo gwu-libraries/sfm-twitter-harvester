@@ -91,7 +91,7 @@ class TwitterHarvester(BaseHarvester):
 
         #stream new code 
 
-        elif harvest_type == "stream":
+        elif harvest_type == "twitter_filter_stream":
             self._create_twarc2()
             self.stream_2()
 
@@ -527,7 +527,7 @@ class TwitterHarvester(BaseHarvester):
         elif harvest_type == "twitter_filter":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
         #code for filter stream
-        elif harvest_type == "stream":
+        elif harvest_type == "twitter_filter_stream":
             self._process_tweets_2(TwitterStreamWarcIter2(warc_filepath))
         #code end for for filter stream
         elif harvest_type == "twitter_sample":
