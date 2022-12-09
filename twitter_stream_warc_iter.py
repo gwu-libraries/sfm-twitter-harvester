@@ -67,7 +67,8 @@ class TwitterStreamWarcIter2(BaseWarcIter):
     def line_oriented(self):
         return True
 
-    def _select_item(self, item):                   #user to includes.users
+    def _select_item(self, item):    
+        # TO DO: check these keys --> They may not be accurate anymore              
         if not self.limit_user_ids or item.get("includes.users", {}).get("data.id") in self.limit_user_ids:
             return True
         return False
