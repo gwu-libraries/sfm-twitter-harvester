@@ -38,8 +38,6 @@ class TwitterStreamWarcIter(BaseWarcIter):
         return False
 
 
-#code for stream
-
 class TwitterStreamWarcIter2(BaseWarcIter):
     def __init__(self, filepaths, limit_user_ids=None):
         BaseWarcIter.__init__(self, filepaths)
@@ -55,10 +53,11 @@ class TwitterStreamWarcIter2(BaseWarcIter):
         tweet_list = ensure_flattened(json_obj)
 
         for tweet in tweet_list:
+            # TO DO: Test if this condition works to yield only the records with content
             if "text" in tweet:
                 yield "twitter_status", tweet["id"], date_parse(tweet["created_at"]), tweet    
-        else:
-            yield None, None, None, tweet
+            else:
+                yield None, None, None, tweet
 
     @staticmethod
     def item_types():
@@ -74,6 +73,7 @@ class TwitterStreamWarcIter2(BaseWarcIter):
         return False
 
 
-
+# TO DO: Need a way to invoke either 1 or 2, depending on the case 
+# Consider implementing with command-line args
 if __name__ == "__main__":
     TwitterStreamWarcIter2.main(TwitterStreamWarcIter2)         
