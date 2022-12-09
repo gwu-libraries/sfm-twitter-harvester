@@ -19,7 +19,6 @@ class TwitterStreamWarcIter(BaseWarcIter):
     def _item_iter(self, url, json_obj):
         # Only want statuses, not deletes, stall_warnings, etc.
         #test for stream
-        #print("filter json object Adhithya Kiran",json_obj)
         if "id_str" in json_obj:
             yield "twitter_status", json_obj["id_str"], date_parse(json_obj["created_at"]), json_obj
         else:
@@ -47,18 +46,19 @@ class TwitterStreamWarcIter2(BaseWarcIter):
         self.limit_user_ids = limit_user_ids                                    #fixed
 
     def _select_record(self, url):
-        return url.startswith("https://api.twitter.com/2")  #fixed(earlier:https://api.twitter.com/2/tweets/search/stream)
+        return url.startswith("https://api.twitter.com/2")  
 
     def _item_iter(self, url, json_obj):
-        # Only want statuses, not deletes, stall_warnings, etc.
-        json_obj = ensure_flattened(json_obj)
-        print("Adhithya Kiran json from warc_iter",json.dumps(json_obj))
-        #print("json_obj Adhithya kiran",json_obj)                                                                   #ensureflattened
+        '''
+        Flattens a list of Tweets and iterates over the list, yielding each Tweet to sfm-utils.warc_iter.BaseWarcIter.iter()
+        '''
+        tweet_list = ensure_flattened(json_obj)
 
-        if "data.id" in json_obj:
-            yield "twitter_status", json_obj["data.id"], date_parse(json_obj["data.created_at"]), json_obj    #created at to data.created at
+        for tweet in tweet_list:
+            if "text" in tweet:
+                yield "twitter_status", tweet["id"], date_parse(tweet["created_at"]), tweet    
         else:
-            yield None, None, None, json_obj
+            yield None, None, None, tweet
 
     @staticmethod
     def item_types():
@@ -76,4 +76,4 @@ class TwitterStreamWarcIter2(BaseWarcIter):
 
 
 if __name__ == "__main__":
-    TwitterStreamWarcIter.main(TwitterStreamWarcIter)         #RESTORED TO 1 FROM 2
+    TwitterStreamWarcIter2.main(TwitterStreamWarcIter2)         
