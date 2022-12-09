@@ -226,7 +226,7 @@ class TwitterHarvester(BaseHarvester):
     def stream_2(self):
 
         
-
+        '''
         # remove any active stream rules
         rules = self.twarc.get_stream_rules()
         if "data" in rules and len(rules["data"]) > 0:
@@ -251,6 +251,7 @@ class TwitterHarvester(BaseHarvester):
 
         #log.debug("rules Adhithya Kiran",rules["data"])
         #log.debug("rules lenght Adhithya Kiran",len(rules["data"]))
+        '''
         e = threading.Event()
         #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=100)
         self._process_tweets_stream(self.twarc.stream(event=e,record_keepalive=False),limit=500)
