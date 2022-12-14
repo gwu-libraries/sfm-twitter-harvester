@@ -26,6 +26,7 @@ TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 SEARCH2_ROUTING_KEY = "harvest.start.twitter2.twitter_search_2"
 TIMELINE2_ROUTING_KEY = "harvest.start.twitter2.twitter_user_timeline_2"
 ACADEMIC_SEARCH_ROUTING_KEY = "harvest.start.twitter2.twitter_academic_search"
+FILTER_STREAM_ROUTING_KEY = "harvest.start.twitter2.twitter_filter_stream"
 
 status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
@@ -632,4 +633,4 @@ class TwitterHarvester(BaseHarvester):
 
 
 if __name__ == "__main__":
-    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY, SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY])
+    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY, SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY,FILTER_STREAM_ROUTING_KEY])
