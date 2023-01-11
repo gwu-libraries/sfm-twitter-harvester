@@ -45,20 +45,14 @@ class BaseTwitterTwoStatusTable(BaseTable):
 
     def _header_row(self):
         '''
-        Returns CSV columns from DataFrameConverter
+        Keeping for compatibility with the BaseTable parent class but not needed for twarc2
         '''
-        #return self.DataFrameConverter().columns
         return None
 
     def _row(self, item):
         '''
-        Returns a single row for the CSV, using the twarc_csv DataFrameConverter class.
-        (Probably need to refactor for the sake of greater efficiency, since this creates a new DataFrame for every single Tweet.)
+        Passes Tweet JSON to the caller (ultimately to_twarc2_table) where it is consumed by twarc_csv
         '''
-        #dfc = self.DataFrameConverter()
-        #df = dfc.process([item])
-        # DataFrame.values returns an array of rows -- we want only a single row
-        #return df.fillna('').values[0]
         return item
 
     def id_field(self):
