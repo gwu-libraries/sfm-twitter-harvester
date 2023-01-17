@@ -13,7 +13,7 @@ FILTER_URL = "https://stream.twitter.com/1.1/statuses/filter.json"
 FILTER_STREAM_URL = "https://api.twitter.com/2/tweets/search/stream"
 SAMPLE_URL = "https://stream.twitter.com/1.1/statuses/sample.json"
 
-API_V1 = "https://api.twitter.com/1.1/"
+API_V1 = "https://stream.twitter.com/1.1/"
 API_V2 = "https://api.twitter.com/2/"
 
 
@@ -101,10 +101,10 @@ class TwitterStreamWarcIterAutoVersion(BaseWarcIter):
 
     def _item_iter(self, url, json_obj):
         if url.startswith(API_V1):
-            print("hey this is api1")
+            #print("hey this is api1")
             return TwitterStreamWarcIter._item_iter(self,url, json_obj)
         if url.startswith(API_V2):
-            print("hey this is api2")
+            #print("hey this is api2")
             return TwitterStreamWarcIter2._item_iter(self,url, json_obj)
 
     @staticmethod
