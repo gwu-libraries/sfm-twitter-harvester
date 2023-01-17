@@ -8,6 +8,15 @@ from twarc.expansions import ensure_flattened
 from twarc import Twarc2, expansions
 import json
 
+
+FILTER_URL = "https://stream.twitter.com/1.1/statuses/filter.json"
+FILTER_STREAM_URL = "https://api.twitter.com/2/tweets/search/stream"
+SAMPLE_URL = "https://stream.twitter.com/1.1/statuses/sample.json"
+
+API_V1 = "https://stream.twitter.com/1.1/"
+API_V2 = "https://api.twitter.com/2/"
+
+
 class TwitterStreamWarcIter(BaseWarcIter):
     def __init__(self, filepaths, limit_user_ids=None):
         BaseWarcIter.__init__(self, filepaths)
@@ -73,8 +82,36 @@ class TwitterStreamWarcIter2(BaseWarcIter):
             return True
         return False
 
+class TwitterStreamWarcIterAutoVersion(BaseWarcIter):
+    def __init__(self, filepaths, limit_user_ids=None):
+        BaseWarcIter.__init__(self, filepaths)
+        self.limit_user_ids = limit_user_ids
 
-# TO DO: Need a way to invoke either 1 or 2, depending on the case 
-# Consider implementing with command-line args
+    def _select_record(self, url):
+        if url.startswith(API_V1):
+            return url.startswith(FILTER_URL) or url.startswith(SAMPLE_URL)
+        elif url.startswith(API_V2):
+            return url.startswith(FILTER_STREAM_URL)
+        return False
+
+    def _item_iter(self, url, json_obj):
+        if url.startswith(API_V1):
+            #print("hey this is api1")
+            return TwitterStreamWarcIter._item_iter(self,url, json_obj)
+        if url.startswith(API_V2):
+            #print("hey this is api2")
+            return TwitterStreamWarcIter2._item_iter(self,url, json_obj)
+
+    @staticmethod
+    def item_types():
+        return ["twitter_status"]
+
+    def _select_item(self, item):
+        if not self.limit_user_ids or item.get("user", {}).get("id_str") in self.limit_user_ids:
+            return True
+        return False
+
+
+
 if __name__ == "__main__":
-    TwitterStreamWarcIter2.main(TwitterStreamWarcIter2)         
+    TwitterStreamWarcIterAutoVersion.main(TwitterStreamWarcIterAutoVersion)
