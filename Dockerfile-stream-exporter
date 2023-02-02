@@ -10,4 +10,5 @@ RUN pip install -r requirements/common.txt -r requirements/${build_version}.txt
 ADD docker/stream-exporter/invoke.sh /opt/sfm-setup/
 RUN chmod +x /opt/sfm-setup/invoke.sh
 
-CMD ["/opt/sfm-setup/invoke.sh"]
+ENTRYPOINT ["/opt/sfm-setup/invoke.sh"] 
+CMD ["2"]

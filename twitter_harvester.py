@@ -7,15 +7,14 @@ import re
 import json
 import pytz
 import requests
-import threading #stream code
+import threading 
 
-from twarc import Twarc, Twarc2
+from twarc import Twarc, Twarc2, expansions
 from twarc.decorators2 import _snowflake2millis, _millis2date
 from sfmutils.harvester import BaseHarvester, Msg
 from twitter_stream_warc_iter import TwitterStreamWarcIter
 from twitter_stream_warc_iter import TwitterStreamWarcIter2
 from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
-from twarc import Twarc2, expansions  #stream code
 
 log = logging.getLogger(__name__)
 
@@ -26,7 +25,6 @@ TIMELINE_ROUTING_KEY = "harvest.start.twitter.twitter_user_timeline"
 SEARCH2_ROUTING_KEY = "harvest.start.twitter2.twitter_search_2"
 TIMELINE2_ROUTING_KEY = "harvest.start.twitter2.twitter_user_timeline_2"
 ACADEMIC_SEARCH_ROUTING_KEY = "harvest.start.twitter2.twitter_academic_search"
-FILTER_STREAM_ROUTING_KEY = "harvest.start.twitter2.twitter_filter_stream"
 
 status_re = re.compile("^https://twitter.com/.+/status/\d+$")
 
@@ -89,15 +87,9 @@ class TwitterHarvester(BaseHarvester):
         elif harvest_type == "twitter_user_timeline_2":
             self._create_twarc2()
             self.user_timeline_2()
-
-        #stream new code 
-
         elif harvest_type == "twitter_filter_stream":
             self._create_twarc2()
             self.stream_2()
-
-        #stream new code ends  
-
         else:
             raise KeyError
 
@@ -218,75 +210,23 @@ class TwitterHarvester(BaseHarvester):
         self._harvest_tweets(
             self.twarc.filter(track=track, follow=follow, locations=locations, lang=language, event=self.stop_harvest_seeds_event))
 
-
-    #New stream rule
-
-
-
-
     def stream_2(self):
-
-        
         '''
-        # remove any active stream rules
-        rules = self.twarc.get_stream_rules()
-        if "data" in rules and len(rules["data"]) > 0:
-            rule_ids = [r["id"] for r in rules["data"]]
-            self.twarc.delete_stream_rule_ids(rule_ids)
-
-        # make sure they are empty
-        rules = self.twarc.get_stream_rules()
-        assert "data" not in rules
-
-        # add two rules
-        rules = self.twarc.add_stream_rules(
-            [{"value": "twitter", "tag": "modwarc-test"}, {"value": "musk", "tag": "tdwarc-test"}]
-        )
-        assert len(rules["data"]) == 2
-
-        # make sure they are there
-        #rules = self.twarc.get_stream_rules()
-        #assert len(rules["data"]) == 2
-
-        #print("rules",rules)
-
-        #log.debug("rules Adhithya Kiran",rules["data"])
-        #log.debug("rules lenght Adhithya Kiran",len(rules["data"]))
+        Dispatches call to Twarc2 streaming endpoint.
         '''
+        # TO DO --> Rename keys to reflect new query structure
+        seeds = self.message["seeds"]
+        # Add each seed as a streaming rule
+        # TO DO --> Implement user-added tags
+        rules = [{"value": seed["token"].get("track") } for seed in seeds]
+        # TO DO --> Handle errors when rule limit reached
+        self.twarc.add_stream_rules(rules)
+        # Threading event is used by Twarc2 to start/stop stream
+        # To DO --> Confirm that this is necessary, since the streaming harvester is already using threading events to start/stop harvesting
         e = threading.Event()
-        #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=100)
+        # TO DO --> Remove hard-coding of limit parameter
         self._process_tweets_stream(self.twarc.stream(event=e,record_keepalive=False),limit=500)
 
-        #self._harvest_tweets_2(self.twarc.stream(event=e,record_keepalive=False),limit=500)
-
-        
-        
-        
-        
-        
-
-        #self._harvest_tweets_2(self.twarc.stream())
-
-        
-    #This is working using direct call
-
-    # collect some data 
-        #for count, result in enumerate(self.twarc.stream()):
-        # The Twitter API v2 returns the Tweet information and the user, media etc.  separately
-        # so we use expansions.flatten to get all the information in a single JSON
-            #tweet = expansions.flatten(result)
-        # Here we are printing the full Tweet object JSON to the console
-            #print(json.dumps(tweet))
-            #log.debug("json.dumps(tweet)",json.dumps(tweet))
-        # Replace with the desired number of Tweets
-            #if count > 10:
-                #break
-
-
-        
-
-
-    #end of stream rules
 
     def sample(self):
         self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))
@@ -633,4 +573,4 @@ class TwitterHarvester(BaseHarvester):
 
 
 if __name__ == "__main__":
-    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY, SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY,FILTER_STREAM_ROUTING_KEY])
+    TwitterHarvester.main(TwitterHarvester, QUEUE, [SEARCH_ROUTING_KEY, TIMELINE_ROUTING_KEY, SEARCH2_ROUTING_KEY, TIMELINE2_ROUTING_KEY, ACADEMIC_SEARCH_ROUTING_KEY])

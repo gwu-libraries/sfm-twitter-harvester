@@ -3,6 +3,8 @@ from twitter_stream_warc_iter import TwitterStreamWarcIter
 from twitter_stream_warc_iter import TwitterStreamWarcIter2
 from twitter_rest_exporter import BaseTwitterStatusTable
 from twitter_rest_exporter import BaseTwitterTwoStatusTable
+import argparse
+import sys
 
 
 import logging
@@ -59,7 +61,7 @@ if __name__ == "__main__":
     args, extras = parser.parse_known_args()
     sys.argv = sys.argv[:1] + extras
     if args.twitter_version == '2':
-        TwitterRestExporter2.main(TwitterRestExporter2, QUEUE2, [FILTER_STREAM_ROUTING_KEY])
+        TwitterStreamExporter2.main(TwitterStreamExporter2, QUEUE2, [FILTER_STREAM_ROUTING_KEY])
     else:
-        TwitterRestExporter.main(TwitterRestExporter, QUEUE,
+        TwitterStreamExporter.main(TwitterStreamExporter, QUEUE,
                              [FILTER_ROUTING_KEY, SAMPLE_ROUTING_KEY])
