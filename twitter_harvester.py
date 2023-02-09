@@ -223,9 +223,9 @@ class TwitterHarvester(BaseHarvester):
         self.twarc.add_stream_rules(rules)
         # Threading event is used by Twarc2 to start/stop stream
         # To DO --> Confirm that this is necessary, since the streaming harvester is already using threading events to start/stop harvesting
-        e = threading.Event()
+        #e = threading.Event()
         # TO DO --> Remove hard-coding of limit parameter
-        self._process_tweets_stream(self.twarc.stream(event=e,record_keepalive=False),limit=500)
+        self._process_tweets_stream(self.twarc.stream(event=self.stop_harvest_seeds_event,record_keepalive=False),limit=500)
 
 
     def sample(self):
@@ -406,7 +406,6 @@ class TwitterHarvester(BaseHarvester):
         return "not found or deleted"
 
     def _harvest_tweets(self, tweets):
-        # max_tweet_id = None
         for count, tweet in enumerate(tweets):
             if not count % 100:
                 log.debug("Harvested %s tweets", count)
@@ -416,10 +415,7 @@ class TwitterHarvester(BaseHarvester):
                 break
 
     def _harvest_tweets_2(self, tweets, limit=None):
-        # max_tweet_id = None
-        # Counter for paginated tweets
         for i, page in enumerate(tweets):        
-            
             if 'data' not in page:
                 return
             for count, tweet in enumerate(page['data']):
@@ -429,19 +425,12 @@ class TwitterHarvester(BaseHarvester):
                 if limit and self.result.harvest_counter["tweets"] >= limit:
                     log.debug("Stopping since limit reached.")
                     self.stop_harvest_seeds_event.set()
-                    #break
-                if self.stop_harvest_seeds_event.is_set():
-                    log.debug("Stopping since stop event set.")
                     break
-            else:
-                continue  
-            break
-
-
-    # for stream
+            if self.stop_harvest_seeds_event.is_set():
+                log.debug("Stopping since stop event set.")
+                break
 
     def _process_tweets_stream(self, tweets,limit=None):
-        max_tweet_id = None
         for count, tweet in enumerate(tweets):
             if not count % 100:
                 log.debug("Harvested %s tweets", count)
@@ -451,14 +440,12 @@ class TwitterHarvester(BaseHarvester):
                 self.stop_harvest_seeds_event.set()                
             if self.stop_harvest_seeds_event.is_set():
                 log.debug("Stopping since stop event set.")
+                log.debug("Exiting harvest loop")
+                # This allows the harvester to stop if the limit is reached
+                # TO DO -> trigger the UI to "Turn Off" the harvest
+                # May need to replicate code from sfm-utils/harvester.py:184
+                self.stop_harvest_loop_event.set()
                 break
-            else:
-                continue
-
-
-    #end for stream        
-
-
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
