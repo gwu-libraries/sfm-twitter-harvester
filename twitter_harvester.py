@@ -453,7 +453,7 @@ class TwitterHarvester(BaseHarvester):
                 # This allows the harvester to stop if the limit is reached
                 # TO DO -> trigger the UI to "Turn Off" the harvest
                 # May need to replicate code from sfm-utils/harvester.py:184
-                self.stop_harvest_loop_event.set()
+                #self.stop_harvest_loop_event.set()
                 break
 
     def process_warc(self, warc_filepath):
