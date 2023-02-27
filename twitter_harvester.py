@@ -218,13 +218,13 @@ class TwitterHarvester(BaseHarvester):
         seeds = self.message["seeds"]
         # Delete any streaming rules currently in place
         old_rules = self.twarc.get_stream_rules()
-        old_rule_ids = [d['id'] for d in old_rules.get('data')]
+        old_rule_ids = [d['id'] for d in old_rules.get('data', [])]
         log.debug(f'Deleting rules {old_rule_ids}.')
         if old_rule_ids:
             self.twarc.delete_stream_rule_ids(old_rule_ids)
         # Add each seed as a streaming rule
         # TO DO --> Implement user-added tags
-        new_rules = [{"value": seed["token"].get("track") } for seed in seeds]
+        new_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("rule") } for seed in seeds]
         log.debug(f'Adding rules {new_rules}')
         # TO DO --> Handle errors when rule limit reached
         self.twarc.add_stream_rules(new_rules)
