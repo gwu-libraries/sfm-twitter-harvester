@@ -60,6 +60,7 @@ class TwitterHarvester(BaseHarvester):
         self.twarc = None
         self.connection_errors = connection_errors
         self.http_errors = http_errors
+        self.streaming_rules = None # for use with the v2 streaming API
 
     def harvest_seeds(self):
         # Dispatch message based on type.
@@ -210,11 +211,10 @@ class TwitterHarvester(BaseHarvester):
         self._harvest_tweets(
             self.twarc.filter(track=track, follow=follow, locations=locations, lang=language, event=self.stop_harvest_seeds_event))
 
-    def stream_2(self):
+    def set_streaming_rules(self):
         '''
-        Registers streaming rules and dispatches to Twarc2 streaming method. Each seed is treated as a separate streaming rule. Existing rules are deleted when starting a new harvest. Maximum number of rules allowed is determined by user's Twitter API access level. 
+        Registers streaming rules for use with Twarc2 streaming method. Each seed is treated as a separate streaming rule. Existing rules are deleted when starting a new harvest. Maximum number of rules allowed is determined by user's Twitter API access level. 
         '''
-        # TO DO --> Rename keys to reflect new query structure
         seeds = self.message["seeds"]
         # Delete any streaming rules currently in place
         old_rules = self.twarc.get_stream_rules()
@@ -224,15 +224,19 @@ class TwitterHarvester(BaseHarvester):
             self.twarc.delete_stream_rule_ids(old_rule_ids)
         # Add each seed as a streaming rule
         # TO DO --> Implement user-added tags
-        new_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("rule") } for seed in seeds]
-        log.debug(f'Adding rules {new_rules}')
+        self.streaming_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("rule") } for seed in seeds]
+        log.debug(f'Adding rules {self.streaming_rules}')
         # TO DO --> Handle errors when rule limit reached
-        self.twarc.add_stream_rules(new_rules)
-        # Threading event is used by Twarc2 to start/stop stream
-        # To DO --> Confirm that this is necessary, since the streaming harvester is already using threading events to start/stop harvesting
-        #e = threading.Event()
-        # TO DO --> Remove hard-coding of limit parameter
-        #self._process_tweets_stream(self.twarc.stream(event=self.stop_harvest_seeds_event,record_keepalive=False),limit=500)
+        self.twarc.add_stream_rules(self.streaming_rules)
+    
+    def stream_2(self):
+        '''
+        Dispatches to Twarc2 streaming method. 
+        '''
+        # If no streaming rules are recorded with the harvester, set them now
+        # State persists when harvest is restarted 
+        if not self.streaming_rules:
+            self.set_streaming_rules()      
         self._harvest_tweets(
             self.twarc.stream(event=self.stop_harvest_seeds_event,record_keepalive=False))
 
