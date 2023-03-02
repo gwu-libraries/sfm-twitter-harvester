@@ -216,18 +216,40 @@ class TwitterHarvester(BaseHarvester):
         Registers streaming rules for use with Twarc2 streaming method. Each seed is treated as a separate streaming rule. Existing rules are deleted when starting a new harvest. Maximum number of rules allowed is determined by user's Twitter API access level. 
         '''
         seeds = self.message["seeds"]
-        # Delete any streaming rules currently in place
-        old_rules = self.twarc.get_stream_rules()
-        old_rule_ids = [d['id'] for d in old_rules.get('data', [])]
-        log.debug(f'Deleting rules {old_rule_ids}.')
-        if old_rule_ids:
-            self.twarc.delete_stream_rule_ids(old_rule_ids)
         # Add each seed as a streaming rule
         # TO DO --> Implement user-added tags
         self.streaming_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("rule") } for seed in seeds]
-        log.debug(f'Adding rules {self.streaming_rules}')
-        # TO DO --> Handle errors when rule limit reached
-        self.twarc.add_stream_rules(self.streaming_rules)
+        # Delete any streaming rules currently in place that don't match the current list of rules (seeds)
+        old_rules = {r['value']: r['id'] for r in self.twarc.get_stream_rules().get('data', [])}
+        rules_to_add = []
+        for rule in self.streaming_rules:
+            if rule['value'] not in old_rules:
+                rules_to_add.append(rule)
+            else:
+                old_rules.pop(rule['value'], None)
+        log.debug(f"Deleting rules {old_rules}.")
+        if old_rules:
+            self.twarc.delete_stream_rule_ids(list(old_rules.values()))
+        log.debug(f"Adding rules {rules_to_add}")
+        # Add rules one by one so that in situations where the user attempts to add too many rules, at least some rules will be added
+        for i, rule in enumerate(rules_to_add):
+            try:
+                self.twarc.add_stream_rules([rule])
+            # Catch errors from Twarc2
+            except requests.exceptions.HTTPError as e:
+                try:
+                    resp_json = e.response.json()
+                except json.decoder.JSONDecodeError:
+                    raise e
+                if 'title' in resp_json and resp_json["title"] == "RulesCapExceeded":
+                    not_added = '; '.join([r['value'] for r in rules_to_add[i:]])
+                    msg = f"Rules cap exceeded for this Twitter credential. The following rules were not added: {not_added}."
+                    log.exception(msg)
+                    self.result.warnings.append(Msg(f"token_RulesCapExceeded", msg))
+                    return
+                else:
+                    log.error(resp_json)
+                    raise e
     
     def stream_2(self):
         '''
