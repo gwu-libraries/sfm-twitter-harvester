@@ -216,7 +216,6 @@ class TwitterRestExporter2(BaseExporter):
 
                 # Using pandas/twarc_csv instead of PETL
                 twarc_export_formats = ("csv", "tsv", "xlsx", "json")
-
                 # Other possibilities: XML, databases, HDFS
                 if export_format == "json_full":
                     self._full_json_export(warc_paths, base_filepath, dedupe, item_date_start, item_date_end, seed_uids,
