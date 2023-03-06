@@ -65,16 +65,34 @@ class TestTwitterRestExporter2(tests.TestCase):
     
 
     def test_export_csv(self):
+        '''
+        Tests export of Tweets to CSV.
+        '''
         self.export_collection(export_format='csv')
         csv_filepath = os.path.join(self.export_path, "test1_001.csv")
         self.assertTrue(os.path.exists(csv_filepath))
         with open(csv_filepath, "r") as f:
             lines = f.readlines()
-            self.assertEqual(10, len(lines))
+        self.assertEqual(10, len(lines))
+        first_few_columns = ['id','conversation_id','referenced_tweets.replied_to.id','referenced_tweets.retweeted.id','referenced_tweets.quoted.id','author_id','in_reply_to_user_id','in_reply_to_username']
+        self.assertTrue(lines[0].startswith(','.join(first_few_columns)))
 
     
     def test_export_full_json(self):
+        '''
+        Test full JSON export of Tweets.
+        '''
         self.export_collection(export_format='json_full')
+        json_filepath = os.path.join(self.export_path, "test1_001.json")
+        with open(json_filepath, 'r') as f:
+            lines = f.readlines()
+        self.assertEqual(9, len(lines))
+        tweet_dict = json.loads(lines[0])
+        test_keys = ['text', 'author_id', 'created_at']
+        self.assertDictEqual({'text': 'If you’ve been in Gelman this past week, you may have noticed our middle elevator is out of service. This is the first elevator being replaced during our Elevator Improvement Project. We appreciate your understanding through this process! If you are able, please take the stairs.',
+                           'author_id': '9710852',
+                           'created_at': '2023-03-03T15:46:19.000Z'},
+                           {k: tweet_dict[k] for k in test_keys})
         
 
     @patch("sfmutils.exporter.ApiClient", autospec=True)
@@ -82,7 +100,7 @@ class TestTwitterRestExporter2(tests.TestCase):
     @patch("sfmutils.consumer.ConsumerProducerMixin.producer", new_callable=PropertyMock, spec=Producer)    
     def export_collection(self, mock_producer, mock_api_client_cls, export_format):
         '''
-        Testing the export on a collection (CSV or full JSON)
+        Testing the export on a collection (CSV or full JSON). Also serves to test the BaseTwitterTwoStatusTable and TwitterRestWarcIter2 classes.
         '''
         mock_api_client = MagicMock(spec=ApiClient)
         mock_api_client_cls.side_effect = [mock_api_client]
