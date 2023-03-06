@@ -174,7 +174,6 @@ class TwitterRestExporter2(BaseExporter):
         assert self.message
         export_id = self.message["id"]
         log.info("Performing export %s", export_id)
-        log.debug(self.message)
         self.result = ExportResult()
         self.result.started = datetime_now()
 

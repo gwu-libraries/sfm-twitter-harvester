@@ -49,11 +49,13 @@ class TestTwitterRestExporter2(tests.TestCase):
                     "path": "0d306636fa5a449db529726a050eae32-20230303155805784-00000-obwhr8ac.warc.gz",
                     "sha1": "8d50088944f9ab25042a61d1c14b5af918202854",
                     "bytes": "2869",
-                    "date_created": "2023-03-03T15:58:07Z"}]
-        self.warc_filepaths = [
-            os.path.join(self.warc_base_path, self.warcs[0]['path']),
-            os.path.join(self.warc_base_path, self.warcs[1]['path'])
-        ]
+                    "date_created": "2023-03-03T15:58:07Z"},
+                    {"warc_id": 'test_users_warc',
+                    "path": "test_users.warc.gz",
+                    "sha1": "",
+                    "bytes": "4557",
+                    "date_created": "2023-03-03T15:58:07Z"}
+                ]
         self.export_path = tempfile.mkdtemp()
         self.working_path = tempfile.mkdtemp()
 
@@ -96,6 +98,45 @@ class TestTwitterRestExporter2(tests.TestCase):
         
 
     @patch("sfmutils.exporter.ApiClient", autospec=True)
+    def test_export_seeds(self, mock_api_client_cls):
+
+        mock_api_client = MagicMock(spec=ApiClient)
+        mock_api_client_cls.side_effect = [mock_api_client]
+        mock_api_client.warcs.side_effect = [self.warcs[2:]]
+
+        export_message = {
+            "id": "test2",
+            "type": "test_user",
+            "seeds": [
+                {
+                    "id": "user_1",
+                    "uid": "9710852"
+                },
+            ],
+            "format": "csv",
+            "segment_size": None,
+            "path": self.export_path,
+        }
+
+        exporter = TwitterRestExporter2("http://test", self.working_path,  warc_base_path=self.warc_base_path)
+        exporter.routing_key = "export.start.test.test_user"
+        exporter.message = export_message
+        exporter.on_message()
+
+        mock_api_client_cls.assert_called_once_with("http://test")
+        mock_api_client.warcs.assert_called_once_with(collection_id=None,
+                                                      seed_ids=["user_1"],
+                                                      harvest_date_start=None, harvest_date_end=None)
+
+        self.assertTrue(exporter.result.success)
+        csv_filepath = os.path.join(self.export_path, "test2_001.csv")
+        self.assertTrue(os.path.exists(csv_filepath))
+        with open(csv_filepath, "r") as f:
+            lines = f.readlines()
+        self.assertEqual(2, len(lines))
+
+
+    @patch("sfmutils.exporter.ApiClient", autospec=True)
     # Mock out Producer
     @patch("sfmutils.consumer.ConsumerProducerMixin.producer", new_callable=PropertyMock, spec=Producer)    
     def export_collection(self, mock_producer, mock_api_client_cls, export_format):
@@ -104,7 +145,7 @@ class TestTwitterRestExporter2(tests.TestCase):
         '''
         mock_api_client = MagicMock(spec=ApiClient)
         mock_api_client_cls.side_effect = [mock_api_client]
-        mock_api_client.warcs.side_effect = [self.warcs]
+        mock_api_client.warcs.side_effect = [self.warcs[:2]]
 
         mock_connection = MagicMock(spec=Connection)
         mock_exchange = MagicMock(spec=Exchange)
