@@ -63,12 +63,27 @@ class TestTwitterRestExporter2(tests.TestCase):
         if os.path.exists(self.working_path):
             shutil.rmtree(self.working_path)
     
+
+    def test_export_csv(self):
+        self.export_collection(export_format='csv')
+        csv_filepath = os.path.join(self.export_path, "test1_001.csv")
+        self.assertTrue(os.path.exists(csv_filepath))
+        with open(csv_filepath, "r") as f:
+            lines = f.readlines()
+            self.assertEqual(10, len(lines))
+
+    
+    def test_export_full_json(self):
+        self.export_collection(export_format='json_full')
+        
+
     @patch("sfmutils.exporter.ApiClient", autospec=True)
     # Mock out Producer
-    @patch("sfmutils.consumer.ConsumerProducerMixin.producer", new_callable=PropertyMock, spec=Producer)
-    def test_export_collection(self, mock_producer, mock_api_client_cls):
-
-
+    @patch("sfmutils.consumer.ConsumerProducerMixin.producer", new_callable=PropertyMock, spec=Producer)    
+    def export_collection(self, mock_producer, mock_api_client_cls, export_format):
+        '''
+        Testing the export on a collection (CSV or full JSON)
+        '''
         mock_api_client = MagicMock(spec=ApiClient)
         mock_api_client_cls.side_effect = [mock_api_client]
         mock_api_client.warcs.side_effect = [self.warcs]
@@ -90,7 +105,7 @@ class TestTwitterRestExporter2(tests.TestCase):
             "collection": {
                 "id": "eeb80f0540fd4a978bf414bf0084a010"
             },
-            "format": "csv",
+            "format": export_format,
             "segment_size": None,
             "path": self.export_path,
             "dedupe": True,
@@ -117,12 +132,7 @@ class TestTwitterRestExporter2(tests.TestCase):
                                                       harvest_date_end=harvest_date_end)
 
         self.assertTrue(exporter.result.success)
-        csv_filepath = os.path.join(self.export_path, "test1_001.csv")
-        self.assertTrue(os.path.exists(csv_filepath))
-        with open(csv_filepath, "r") as f:
-            lines = f.readlines()
-        self.assertEqual(10, len(lines))
 
         # We skip the rests of the test, since the functionality is the same as in BaseExporter
 
-
+   
