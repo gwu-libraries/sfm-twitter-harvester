@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import tests
 from tests.tweets import tweet2
 #from twitter_rest_exporter import TwitterRestStatusTable
-from twitter_rest_exporter import BaseTwitterStatusTable, BaseTwitterTwoStatusTable, TwitterRestExporter2
+from twitter_rest_exporter import BaseTwitterStatusTable, BaseTwitterTwoStatusTable, TwitterRestExporter2, create_twitter_status_table_class
 from twitter_rest_warc_iter import TwitterRestWarcIter2
 from datetime import datetime
 import os
