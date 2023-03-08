@@ -8,6 +8,7 @@ import json
 import pytz
 import requests
 import threading 
+from functools import wraps
 
 from twarc import Twarc, Twarc2, expansions
 from twarc.decorators2 import _snowflake2millis, _millis2date
@@ -50,6 +51,36 @@ def check_timedelta(timestamp, offset_days=7):
         return timestamp
     else:
         return None
+
+def v2_error_handling(f):
+    '''
+    Defines an error-handling decorator for v2 twarc API calls. 
+    We don't attempt to catch all the errors, but we can identify a few common ones and send the UI appropriate messages.
+    '''
+    @wraps(f)
+    # Using self argument because we're wrapping instance methods
+    def new_f(self, *args, **kwargs):
+        try:
+            return f(self, *args, **kwargs)
+        except requests.exceptions.HTTPError as e:
+            try:
+                resp_json = e.response.json()
+                title = resp_json.get("title", "")
+            except json.decoder.JSONDecodeError:
+                raise e
+            if e.response.status_code == 401 and title == "Unauthorized":
+                msg = f"Provided API credentials are invalid. Please check your Twitter developer account to ensure that you have entered them correctly in SFM."
+            elif e.response.status_code == 403 and title == "Client Forbidden" and resp_json.get("reason") == "client-not-enrolled":
+                msg = f"Provided API credentials not valid for this type of API access."
+            elif title == "UsageCapExceeded":
+                msg = f"Monthly usage cap exceeded with these API credentials. Please check the Twitter Developer portal for more information about your account."
+            else:
+                raise e
+            title = title.replace(" ", "_")
+            self.result.errors.append(Msg(f"harvest_{title}", msg))
+            #raise e
+            self.result.success = False
+    return new_f
 
 class TwitterHarvester(BaseHarvester):
     def __init__(self, working_path, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False,
@@ -126,7 +157,7 @@ class TwitterHarvester(BaseHarvester):
         query, geocode = self._search_parameters()
         self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
     
-
+    @v2_error_handling
     def search_2(self, harvest_type="twitter_search_2"):
         '''
         :param harvest_type: str of the harvest type (to differentiate behaviors between search_recent and search_all (Academic Search))
@@ -309,7 +340,8 @@ class TwitterHarvester(BaseHarvester):
                                                           user_id)) if incremental else None
 
                 self._harvest_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
-
+    
+    @v2_error_handling
     def user_timeline_2(self):
         incremental = self.message.get("options", {}).get("incremental", False)
 
