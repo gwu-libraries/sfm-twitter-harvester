@@ -78,7 +78,6 @@ def v2_error_handling(f):
                 raise e
             title = title.replace(" ", "_")
             self.result.errors.append(Msg(f"harvest_{title}", msg))
-            #raise e
             self.result.success = False
     return new_f
 
@@ -249,7 +248,7 @@ class TwitterHarvester(BaseHarvester):
         seeds = self.message["seeds"]
         # Add each seed as a streaming rule
         # TO DO --> Implement user-added tags
-        self.streaming_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("rule") } for seed in seeds]
+        self.streaming_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("tag", seed["token"].get("rule")) } for seed in seeds]
         # Delete any streaming rules currently in place that don't match the current list of rules (seeds)
         old_rules = {r['value']: r['id'] for r in self.twarc.get_stream_rules().get('data', [])}
         rules_to_add = []
