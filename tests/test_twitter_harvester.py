@@ -1093,6 +1093,55 @@ class TestTwitterTwoHarvesterIntegration(tests.TestCase):
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+    
+    def test_streaming(self):
+        self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_2"
+        harvest_msg = create_message("3", "twitter_filter_stream")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"]= [
+                {
+                    "id": "seed_id3",
+                    "token": {
+                        "rule": "from:gelmanlibrary",
+                        "tag": "gelman library"
+                    }
+                }
+            ]
+
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter2.twitter_filter_stream")
+
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:3", status_msg["id"])
+            # Running
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Wait 15 seconds
+            time.sleep(15)
+
+            # Send stop message
+            harvest_stop_msg = {
+                "id": "test:3",
+            }
+            producer.publish(harvest_stop_msg, routing_key="harvest.stop.twitter2.twitter_filter_stream")
+
+            # Another running message
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            self.assertEqual(STATUS_STOPPING, status_msg["status"])
+
+            # Now wait for result message.
+            result_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:3", result_msg["id"])
+
+            # Success
+            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
+
+            # Warc created message.
+            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
     def _wait_for_message(self, queue, connection):
         counter = 0
