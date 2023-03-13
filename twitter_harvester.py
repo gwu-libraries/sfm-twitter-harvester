@@ -109,6 +109,9 @@ class TwitterHarvester(BaseHarvester):
         elif harvest_type == "twitter_filter":
             self._create_twarc()
             self.filter()
+        elif harvest_type == "twitter_sample":
+            self._create_twarc()
+            self.sample()
         elif harvest_type == "twitter_user_timeline":
             self._create_twarc()
             self.user_timeline()
@@ -524,6 +527,8 @@ class TwitterHarvester(BaseHarvester):
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
         elif harvest_type == "twitter_filter_stream":
             self._process_tweets_2(TwitterStreamWarcIter2(warc_filepath))
+        elif harvest_type == "twitter_sample":
+            self._process_tweets(TwitterStreamWarcIter(warc_filepath))
         elif harvest_type == "twitter_user_timeline":
             self.process_user_timeline_warc(warc_filepath)
         elif harvest_type == "twitter_user_timeline_2":
