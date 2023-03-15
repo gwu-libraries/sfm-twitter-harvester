@@ -522,7 +522,7 @@ class TestTwitterHarvester2(tests.TestCase):
     def test_user_timeline_2(self, mock_twarc_class):
         mock_twarc = MagicMock(spec=Twarc2)
         # Expecting 2 user timelines. First returns 2 tweets. Second returns none.
-        mock_twarc.timeline.side_effect = [[join_tweets(tweet1_2, tweet2_2), ()]]
+        mock_twarc.timeline.side_effect = [[join_tweets(tweet1_2, tweet2_2)], [()]]
         # Expecting 2 calls to get for user lookup
         mock_response1 = MagicMock()
         mock_response1.status_code = 200
@@ -551,7 +551,7 @@ class TestTwitterHarvester2(tests.TestCase):
 
         mock_twarc = MagicMock(spec=Twarc2)
         # Expecting 2 timelines. First returns 1 tweets. Second returns none.
-        mock_twarc.timeline.side_effect = [[tweet2_2, ()]]
+        mock_twarc.timeline.side_effect = [[tweet2_2], [()]]
         # Expecting 2 calls to get for user lookup
         mock_response1 = MagicMock()
         mock_response1.status_code = 200
