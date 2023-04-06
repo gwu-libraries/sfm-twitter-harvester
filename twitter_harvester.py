@@ -75,6 +75,7 @@ def v2_error_handling(f):
             elif title == "UsageCapExceeded":
                 msg = f"Monthly usage cap exceeded with these API credentials. Please check the Twitter Developer portal for more information about your account."
             else:
+                log.debug(resp_json)
                 raise e
             title = title.replace(" ", "_")
             self.result.errors.append(Msg(f"harvest_{title}", msg))
