@@ -84,6 +84,8 @@ def v2_error_handling(f):
             title = title.replace(" ", "_")
             self.result.errors.append(Msg(f"harvest_{title}", msg))
             self.result.success = False
+            # For streaming harvesters: necessary to interrupt the harvest
+            self.stop_harvest_loop_event.set()
     return new_f
 
 class TwitterHarvester(BaseHarvester):
