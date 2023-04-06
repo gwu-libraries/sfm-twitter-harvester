@@ -285,7 +285,8 @@ class TwitterHarvester(BaseHarvester):
                 else:
                     log.error(resp_json)
                     raise e
-    
+                    
+    @v2_error_handling
     def stream_2(self):
         '''
         Dispatches to Twarc2 streaming method. 
