@@ -174,7 +174,6 @@ class TwitterRestExporter2(BaseExporter):
         assert self.message
         export_id = self.message["id"]
         log.info("Performing export %s", export_id)
-        log.debug(self.message)
         self.result = ExportResult()
         self.result.started = datetime_now()
 
@@ -216,7 +215,6 @@ class TwitterRestExporter2(BaseExporter):
 
                 # Using pandas/twarc_csv instead of PETL
                 twarc_export_formats = ("csv", "tsv", "xlsx", "json")
-
                 # Other possibilities: XML, databases, HDFS
                 if export_format == "json_full":
                     self._full_json_export(warc_paths, base_filepath, dedupe, item_date_start, item_date_end, seed_uids,

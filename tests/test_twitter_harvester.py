@@ -127,6 +127,27 @@ base_timeline_message_2 = {
     }
 }
 
+integration_timeline_seeds = [{"id": "seed_id1",
+                    "token": "socialfeedmgr"
+                },
+                {
+                    "id": "seed_id2",
+                    "uid": "2875189485"
+                },
+                {
+                    "id": "seed_id3",
+                    "token": "110_meryam"
+                },
+                {
+                    "id": "seed_id4",
+                    "token": "idkydktdk",
+                    "uid": "326940537"
+                },
+                {
+                    "id": "seed_id5",
+                    "uid": "757448176630571009"
+                }
+            ]
 
 class TestTwitterHarvester(tests.TestCase):
     def setUp(self):
@@ -808,35 +829,18 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
     def test_search(self):
         self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_1"
-        harvest_msg = {
-            "id": "test:1",
-            "type": "twitter_search",
-            "path": self.harvest_path,
-            "seeds": [
+        harvest_msg = create_message("1", "twitter_search")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"] = [
                 {
-                    "id": "seed_id3",
+                    "id": "seed_id1",
                     "token": {
                         "query": "gelman",
                         "geocode": None
                     }
                 }
-            ],
-            "credentials": {
-                "consumer_key": tests.TWITTER_CONSUMER_KEY,
-                "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
-                "access_token": tests.TWITTER_ACCESS_TOKEN,
-                "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
-            },
-            "collection_set": {
-                "id": "test_collection_set"
-            },
-            "collection": {
-                "id": "test_collection"
-            },
-            "options": {
-                "tweets": True
-            }
-        }
+            ]
+
         with self._create_connection() as connection:
             bound_exchange = self.exchange(connection)
             producer = Producer(connection, exchange=bound_exchange)
@@ -864,6 +868,8 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
+    # Bracketing for now, pending deprecation of v.1 Filter API
+    ''' 
     def test_filter(self):
         self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_2"
         harvest_msg = {
@@ -931,110 +937,13 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
-    def test_sample(self):
-        self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_3"
-        harvest_msg = {
-            "id": "test:3",
-            "type": "twitter_sample",
-            "path": self.harvest_path,
-            "credentials": {
-                "consumer_key": tests.TWITTER_CONSUMER_KEY,
-                "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
-                "access_token": tests.TWITTER_ACCESS_TOKEN,
-                "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
-            },
-            "collection_set": {
-                "id": "test_collection_set"
-            },
-            "collection": {
-                "id": "test_collection"
-            },
-            "options": {
-                "tweets": True
-            }
-        }
-        with self._create_connection() as connection:
-            bound_exchange = self.exchange(connection)
-            producer = Producer(connection, exchange=bound_exchange)
-            producer.publish(harvest_msg, routing_key="harvest.start.twitter.twitter_sample")
-
-            status_msg = self._wait_for_message(self.result_queue, connection)
-            # Matching ids
-            self.assertEqual("test:3", status_msg["id"])
-            # Running
-            self.assertEqual(STATUS_RUNNING, status_msg["status"])
-
-            # Wait 15 seconds
-            time.sleep(15)
-
-            # Send stop message
-            harvest_stop_msg = {
-                "id": "test:3",
-            }
-            producer.publish(harvest_stop_msg, routing_key="harvest.stop.twitter.twitter_sample")
-
-            # Another running message
-            status_msg = self._wait_for_message(self.result_queue, connection)
-            self.assertEqual(STATUS_STOPPING, status_msg["status"])
-
-            # Now wait for result message.
-            result_msg = self._wait_for_message(self.result_queue, connection)
-            # Matching ids
-            self.assertEqual("test:3", result_msg["id"])
-            # Success
-            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
-            # Some tweets
-            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
-
-            # Warc created message.
-            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
-
+    '''
     def test_user_timeline(self):
         self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_4"
-        harvest_msg = {
-            "id": "test:4",
-            "type": "twitter_user_timeline",
-            "path": self.harvest_path,
-            "seeds": [
-                # By screen name
-                {
-                    "id": "seed_id1",
-                    "token": "socialfeedmgr"
-                },
-                {
-                    "id": "seed_id2",
-                    "uid": "2875189485"
-                },
-                {
-                    "id": "seed_id3",
-                    "token": "110_meryam"
-                },
-                {
-                    "id": "seed_id4",
-                    "token": "idkydktdk",
-                    "uid": "326940537"
-                },
-                {
-                    "id": "seed_id5",
-                    "uid": "757448176630571009"
-                }
-            ],
-            "credentials": {
-                "consumer_key": tests.TWITTER_CONSUMER_KEY,
-                "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
-                "access_token": tests.TWITTER_ACCESS_TOKEN,
-                "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET
-            },
-            "collection_set": {
-                "id": "test_collection_set"
-            },
-            "collection": {
-                "id": "test_collection"
-            },
-            "options": {
-                "tweets": True
-            }
-        }
+        harvest_msg = create_message("4", "twitter_user_timeline")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"] = integration_timeline_seeds
+
         with self._create_connection() as connection:
             bound_exchange = self.exchange(connection)
             producer = Producer(connection, exchange=bound_exchange)
@@ -1063,6 +972,176 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
 
             # Warc created message.
             self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+    
+    def _wait_for_message(self, queue, connection):
+        counter = 0
+        message_obj = None
+        bound_result_queue = queue(connection)
+        while counter < 180 and not message_obj:
+            time.sleep(.5)
+            message_obj = bound_result_queue.get(no_ack=True)
+            counter += 1
+        self.assertIsNotNone(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
+        return message_obj.payload
+
+@unittest.skipIf(not tests.test_config_available, "Skipping test since test config not available.")
+@unittest.skipIf(not tests.integration_env_available, "Skipping test since integration env not available.")
+class TestTwitterTwoHarvesterIntegration(tests.TestCase):
+    @staticmethod
+    def _create_connection():
+        return Connection(hostname="mq", userid=tests.mq_username, password=tests.mq_password)
+
+    def setUp(self):
+        self.exchange = Exchange(EXCHANGE, type="topic")
+        self.result_queue = Queue(name="result_queue", routing_key="harvest.status.twitter2.*", exchange=self.exchange,
+                                  durable=True)
+        self.warc_created_queue = Queue(name="warc_created_queue", routing_key="warc_created", exchange=self.exchange)
+        twitter_harvester_queue = Queue(name="twitter_harvester", exchange=self.exchange)
+        twitter_rest_harvester_queue = Queue(name="twitter_rest_harvester", exchange=self.exchange)
+        with self._create_connection() as connection:
+            self.result_queue(connection).declare()
+            self.result_queue(connection).purge()
+            self.warc_created_queue(connection).declare()
+            self.warc_created_queue(connection).purge()
+            # Declaring to avoid race condition with harvester starting.
+            twitter_harvester_queue(connection).declare()
+            twitter_harvester_queue(connection).purge()
+            twitter_rest_harvester_queue(connection).declare()
+            twitter_rest_harvester_queue(connection).purge()
+
+        self.harvest_path = None
+
+    def tearDown(self):
+        if self.harvest_path:
+            shutil.rmtree(self.harvest_path, ignore_errors=True)
+    
+    def test_search_2(self):
+        '''
+        Testing v.2 search_recent API
+        '''
+        self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_1"
+        harvest_msg = create_message("2", "twitter_search_2")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"] = [
+                {
+                    "id": "seed_id2",
+                    "token": {
+                        "query": "gelman",
+                        "limit": 100
+                    }
+                }
+            ]
+
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter2.twitter_search_2")
+
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:2", status_msg["id"])
+            # Running
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Another running message
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            self.assertEqual(STATUS_STOPPING, status_msg["status"])
+            # Now wait for result message.
+            result_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:2", result_msg["id"])
+            # Success
+            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
+            # Some tweets
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
+
+            # Warc created message.
+            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+
+    
+    def test_user_timeline_2(self):
+        self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_4"
+        harvest_msg = create_message("4", "twitter_user_timeline_2")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"] = integration_timeline_seeds
+
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter2.twitter_user_timeline_2")
+
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:4", status_msg["id"])
+            # Running
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Another running message
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Now wait for result message.
+            result_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:4", result_msg["id"])
+            # Success
+            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
+            # Some tweets
+            self.assertTrue(result_msg["stats"][date.today().isoformat()]["tweets"])
+            # 3 warnings
+            self.assertEqual(3, len(result_msg["warnings"]))
+
+            # Warc created message.
+            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
+    
+    def test_streaming(self):
+        self.harvest_path = "/sfm-collection-set-data/collection_set/test_collection/test_2"
+        harvest_msg = create_message("3", "twitter_filter_stream")
+        harvest_msg["path"] = self.harvest_path
+        harvest_msg["seeds"]= [
+                {
+                    "id": "seed_id3",
+                    "token": {
+                        "rule": "from:gelmanlibrary",
+                        "tag": "gelman library"
+                    }
+                }
+            ]
+
+        with self._create_connection() as connection:
+            bound_exchange = self.exchange(connection)
+            producer = Producer(connection, exchange=bound_exchange)
+            producer.publish(harvest_msg, routing_key="harvest.start.twitter2.twitter_filter_stream")
+
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:3", status_msg["id"])
+            # Running
+            self.assertEqual(STATUS_RUNNING, status_msg["status"])
+
+            # Wait 15 seconds
+            time.sleep(15)
+
+            # Send stop message
+            harvest_stop_msg = {
+                "id": "test:3",
+            }
+            producer.publish(harvest_stop_msg, routing_key="harvest.stop.twitter2.twitter_filter_stream")
+
+            # Another running message
+            status_msg = self._wait_for_message(self.result_queue, connection)
+            self.assertEqual(STATUS_STOPPING, status_msg["status"])
+
+            # Now wait for result message.
+            result_msg = self._wait_for_message(self.result_queue, connection)
+            # Matching ids
+            self.assertEqual("test:3", result_msg["id"])
+
+            # Success
+            self.assertEqual(STATUS_SUCCESS, result_msg["status"])
+
+            # Warc created message.
+            self.assertTrue(self._wait_for_message(self.warc_created_queue, connection))
 
     def _wait_for_message(self, queue, connection):
         counter = 0
@@ -1074,3 +1153,28 @@ class TestTwitterHarvesterIntegration(tests.TestCase):
             counter += 1
         self.assertIsNotNone(message_obj, "Timed out waiting for result at {}.".format(datetime.now()))
         return message_obj.payload
+
+def create_message(id_num, harvest_type):
+        '''
+        Creates message for integration tests
+        '''
+        return {
+            "id": f"test:{id_num}",
+            "type": harvest_type,
+            "credentials": {
+                "consumer_key": tests.TWITTER_CONSUMER_KEY,
+                "consumer_secret": tests.TWITTER_CONSUMER_SECRET,
+                "access_token": tests.TWITTER_ACCESS_TOKEN,
+                "access_token_secret": tests.TWITTER_ACCESS_TOKEN_SECRET,
+                "bearer_token": tests.TWITTER_BEARER_TOKEN
+            },
+            "collection_set": {
+                "id": "test_collection_set"
+            },
+            "collection": {
+                "id": "test_collection"
+            },
+            "options": {
+                "tweets": True
+            }
+        }
