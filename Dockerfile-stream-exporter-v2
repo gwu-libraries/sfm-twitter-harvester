@@ -11,3 +11,4 @@ ADD docker/stream-exporter/invoke.sh /opt/sfm-setup/
 RUN chmod +x /opt/sfm-setup/invoke.sh
 
 ENTRYPOINT ["/opt/sfm-setup/invoke.sh"] 
+CMD ["2"]

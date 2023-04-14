@@ -7,11 +7,14 @@ import re
 import json
 import pytz
 import requests
+import threading 
+from functools import wraps
 
-from twarc import Twarc, Twarc2
+from twarc import Twarc, Twarc2, expansions
 from twarc.decorators2 import _snowflake2millis, _millis2date
 from sfmutils.harvester import BaseHarvester, Msg
 from twitter_stream_warc_iter import TwitterStreamWarcIter
+from twitter_stream_warc_iter import TwitterStreamWarcIter2
 from twitter_rest_warc_iter import TwitterRestWarcIter, TwitterRestWarcIter2
 
 log = logging.getLogger(__name__)
@@ -49,6 +52,42 @@ def check_timedelta(timestamp, offset_days=7):
     else:
         return None
 
+def v2_error_handling(f):
+    '''
+    Defines an error-handling decorator for v2 twarc API calls. 
+    We don't attempt to catch all the errors, but we can identify a few common ones and send the UI appropriate messages.
+    '''
+    @wraps(f)
+    # Using self argument because we're wrapping instance methods
+    def new_f(self, *args, **kwargs):
+        try:
+            return f(self, *args, **kwargs)
+        except requests.exceptions.HTTPError as e:
+            try:
+                resp_json = e.response.json()
+                title = resp_json.get("title", "")
+            except json.decoder.JSONDecodeError:
+                raise e
+            if e.response.status_code == 401 and title == "Unauthorized":
+                msg = f"Provided API credentials are invalid. Please check your Twitter developer account to ensure that you have entered them correctly in SFM."
+            elif e.response.status_code == 403 and title == "Client Forbidden" and resp_json.get("reason") == "client-not-enrolled":
+                msg = f"Provided API credentials not valid for this type of API access."
+            elif title == "UsageCapExceeded":
+                msg = f"Monthly usage cap exceeded with these API credentials. Please check the Twitter Developer portal for more information about your account."
+            else:
+                errors = [error.get("message", "") for error in resp_json.get("errors", [])]
+                if any(errors):
+                   errors = "; ".join(errors)
+                else:
+                    errors = "None provided." 
+                msg = f"{resp_json.get('detail', 'Error Details')}: {errors}"
+            title = title.replace(" ", "_")
+            self.result.errors.append(Msg(f"harvest_{title}", msg))
+            self.result.success = False
+            # For streaming harvesters: necessary to interrupt the harvest
+            self.stop_harvest_loop_event.set()
+    return new_f
+
 class TwitterHarvester(BaseHarvester):
     def __init__(self, working_path, stream_restart_interval_secs=30 * 60, mq_config=None, debug=False,
                  connection_errors=5, http_errors=5, debug_warcprox=False, tries=3):
@@ -58,6 +97,7 @@ class TwitterHarvester(BaseHarvester):
         self.twarc = None
         self.connection_errors = connection_errors
         self.http_errors = http_errors
+        self.streaming_rules = None # for use with the v2 streaming API
 
     def harvest_seeds(self):
         # Dispatch message based on type.
@@ -85,6 +125,9 @@ class TwitterHarvester(BaseHarvester):
         elif harvest_type == "twitter_user_timeline_2":
             self._create_twarc2()
             self.user_timeline_2()
+        elif harvest_type == "twitter_filter_stream":
+            self._create_twarc2()
+            self.stream_2()
         else:
             raise KeyError
 
@@ -120,10 +163,12 @@ class TwitterHarvester(BaseHarvester):
         query, geocode = self._search_parameters()
         self._harvest_tweets(self.twarc.search(query, geocode=geocode, since_id=since_id))
     
+    @v2_error_handling
     def search_2(self, harvest_type="twitter_search_2"):
         '''
         :param harvest_type: str of the harvest type (to differentiate behaviors between search_recent and search_all (Academic Search))
         '''
+
         assert len(self.message.get("seeds", [])) == 1
 
         incremental = self.message.get("options", {}).get("incremental", False)
@@ -203,6 +248,59 @@ class TwitterHarvester(BaseHarvester):
         self._harvest_tweets(
             self.twarc.filter(track=track, follow=follow, locations=locations, lang=language, event=self.stop_harvest_seeds_event))
 
+    def set_streaming_rules(self):
+        '''
+        Registers streaming rules for use with Twarc2 streaming method. Each seed is treated as a separate streaming rule. Existing rules are deleted when starting a new harvest. Maximum number of rules allowed is determined by user's Twitter API access level. 
+        '''
+        seeds = self.message["seeds"]
+        # Add each seed as a streaming rule
+        # TO DO --> Implement user-added tags
+        self.streaming_rules = [{"value": seed["token"].get("rule"), "tag": seed["token"].get("tag", seed["token"].get("rule")) } for seed in seeds]
+        # Delete any streaming rules currently in place that don't match the current list of rules (seeds)
+        old_rules = {r['value']: r['id'] for r in self.twarc.get_stream_rules().get('data', [])}
+        rules_to_add = []
+        for rule in self.streaming_rules:
+            if rule['value'] not in old_rules:
+                rules_to_add.append(rule)
+            else:
+                old_rules.pop(rule['value'], None)
+        log.debug(f"Deleting rules {old_rules}.")
+        if old_rules:
+            self.twarc.delete_stream_rule_ids(list(old_rules.values()))
+        log.debug(f"Adding rules {rules_to_add}")
+        # Add rules one by one so that in situations where the user attempts to add too many rules, at least some rules will be added
+        for i, rule in enumerate(rules_to_add):
+            try:
+                self.twarc.add_stream_rules([rule])
+            # Catch errors from Twarc2
+            except requests.exceptions.HTTPError as e:
+                try:
+                    resp_json = e.response.json()
+                except json.decoder.JSONDecodeError:
+                    raise e
+                if 'title' in resp_json and resp_json["title"] == "RulesCapExceeded":
+                    not_added = '; '.join([r['value'] for r in rules_to_add[i:]])
+                    msg = f"Rules cap exceeded for this Twitter credential. The following rules were not added: {not_added}."
+                    log.exception(msg)
+                    self.result.warnings.append(Msg(f"token_RulesCapExceeded", msg))
+                    return
+                else:
+                    log.error(resp_json)
+                    raise e
+                    
+    @v2_error_handling
+    def stream_2(self):
+        '''
+        Dispatches to Twarc2 streaming method. 
+        '''
+        # If no streaming rules are recorded with the harvester, set them now
+        # State persists when harvest is restarted 
+        if not self.streaming_rules:
+            self.set_streaming_rules()      
+        self._harvest_tweets(
+            self.twarc.stream(event=self.stop_harvest_seeds_event,record_keepalive=False))
+
+
     def sample(self):
         self._harvest_tweets(self.twarc.sample(self.stop_harvest_seeds_event))
 
@@ -249,7 +347,8 @@ class TwitterHarvester(BaseHarvester):
                                                           user_id)) if incremental else None
 
                 self._harvest_tweets(self.twarc.timeline(user_id=user_id, since_id=since_id))
-
+    
+    @v2_error_handling
     def user_timeline_2(self):
         incremental = self.message.get("options", {}).get("incremental", False)
 
@@ -381,7 +480,6 @@ class TwitterHarvester(BaseHarvester):
         return "not found or deleted"
 
     def _harvest_tweets(self, tweets):
-        # max_tweet_id = None
         for count, tweet in enumerate(tweets):
             if not count % 100:
                 log.debug("Harvested %s tweets", count)
@@ -390,10 +488,8 @@ class TwitterHarvester(BaseHarvester):
                 log.debug("Stopping since stop event set.")
                 break
 
-    def _harvest_tweets_2(self, tweets, limit=None):
-        # max_tweet_id = None
-        # Counter for paginated tweets
-        for i, page in enumerate(tweets):
+    def _harvest_tweets_2(self, pages, limit=None):
+        for i, page in enumerate(pages):        
             if 'data' not in page:
                 return
             for count, tweet in enumerate(page['data']):
@@ -404,12 +500,26 @@ class TwitterHarvester(BaseHarvester):
                     log.debug("Stopping since limit reached.")
                     self.stop_harvest_seeds_event.set()
                     #break
-                if self.stop_harvest_seeds_event.is_set():
-                    log.debug("Stopping since stop event set.")
-                    break
-            else:
-                continue  
-            break
+            if self.stop_harvest_seeds_event.is_set():
+                log.debug("Stopping since stop event set.")
+                return
+
+    def _process_tweets_stream(self, tweets,limit=None):
+        for count, tweet in enumerate(tweets):
+            if not count % 100:
+                log.debug("Harvested %s tweets", count)
+            self.result.harvest_counter["tweets"] += 1    
+            if limit and self.result.harvest_counter["tweets"] >= limit:
+                log.debug("Stopping since limit reached.")
+                self.stop_harvest_seeds_event.set()                
+            if self.stop_harvest_seeds_event.is_set():
+                log.debug("Stopping since stop event set.")
+                log.debug("Exiting harvest loop")
+                # This allows the harvester to stop if the limit is reached
+                # TO DO -> trigger the UI to "Turn Off" the harvest
+                # May need to replicate code from sfm-utils/harvester.py:184
+                #self.stop_harvest_loop_event.set()
+                break
 
     def process_warc(self, warc_filepath):
         # Dispatch message based on type.
@@ -423,6 +533,8 @@ class TwitterHarvester(BaseHarvester):
             self.process_search_warc_2(warc_filepath)
         elif harvest_type == "twitter_filter":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
+        elif harvest_type == "twitter_filter_stream":
+            self._process_tweets_2(TwitterStreamWarcIter2(warc_filepath))
         elif harvest_type == "twitter_sample":
             self._process_tweets(TwitterStreamWarcIter(warc_filepath))
         elif harvest_type == "twitter_user_timeline":
@@ -489,6 +601,7 @@ class TwitterHarvester(BaseHarvester):
                                                    int(tweet.get("id"))))
                 self._process_tweet(tweet)
 
+      
     def _process_tweets(self, warc_iter):
         max_tweet_id = None
 

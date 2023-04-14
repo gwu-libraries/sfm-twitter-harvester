@@ -20,4 +20,4 @@ supervisord -c /etc/supervisor/supervisord.conf
 
 echo "Starting stream consumer"
 # exec makes this take the pid of the script, which should be pid 1.
-exec stream_consumer.py $SFM_RABBITMQ_HOST $SFM_RABBITMQ_USER $SFM_RABBITMQ_PASSWORD twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter.twitter_sample /opt/sfm-twitter-harvester/twitter_harvester.py /sfm-containers-data/containers/$HOSTNAME --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX --tries=$HARVEST_TRIES
+exec stream_consumer.py $SFM_RABBITMQ_HOST $SFM_RABBITMQ_USER $SFM_RABBITMQ_PASSWORD twitter_harvester harvest.start.twitter.twitter_filter,harvest.start.twitter2.twitter_filter_stream /opt/sfm-twitter-harvester/twitter_harvester.py /sfm-containers-data/containers/$HOSTNAME --debug=$DEBUG --debug-warcprox=$DEBUG_WARCPROX --tries=$HARVEST_TRIES
